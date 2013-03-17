@@ -177,20 +177,20 @@ object Util {
 """
 
   val defineExperimentMessages = """
-  val experimentMessages: Seq[ExperimentJsonAndTypeName] = {
+  val experimentMessages: Seq[JSONAndTypeName] = {
     // This is the same as "flatten".
     val experiments = experimentTable flatMap identity
 
-    object constructExperimentJsonAndTypeName extends Poly1 {
+    object constructJSONAndTypeName extends Poly1 {
       implicit def default[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeTag, R] =
         at[E] { experiment =>
-          ExperimentJsonAndTypeName(
+          JSONAndTypeName(
             experiment.toJson,
             instanceToTypeName(experiment))
         }
     }
 
-    (experiments map constructExperimentJsonAndTypeName) toList
+    (experiments map constructJSONAndTypeName) toList
   }
 """
 
@@ -199,17 +199,17 @@ object Util {
   //    // This is the same as "flatten".
   //    val experiments = experimentTable flatMap identity
   //
-  //    object constructExperimentJsonAndTypeName extends Poly1 {
+  //    object constructJSONAndTypeName extends Poly1 {
   //      implicit def default[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeTag, R] =
   //        at[E] { experiment =>
-  //          ExperimentJsonAndTypeName(
+  //          JSONAndTypeName(
   //            experiment.toJson,
   //            instanceToTypeName(experiment))
   //        }
   //    }
   //
-  //    val experimentMessages: Seq[ExperimentJsonAndTypeName] =
-  //      (experiments map constructExperimentJsonAndTypeName) toList
+  //    val experimentMessages: Seq[JSONAndTypeName] =
+  //      (experiments map constructJSONAndTypeName) toList
   //
   //    val shuffled = new scala.util.Random(0).shuffle(experimentMessages)
   //    shuffled.foreach(typecheckExperiment)
@@ -221,7 +221,7 @@ object Util {
   def getExperimentMessages(
     runtimeConfig: RuntimeConfig,
     experimentParametersSource: String)(
-      implicit imports: Imports): Seq[ExperimentJsonAndTypeName] = {
+      implicit imports: Imports): Seq[JSONAndTypeName] = {
     val source = s"""
 loadOpenCV
 
@@ -240,13 +240,13 @@ ${experimentParametersSource}
 ${defineTable}
     
 // Defines:
-// experimentMessages: Seq[ExperimentJsonAndTypeName]
+// experimentMessages: Seq[JSONAndTypeName]
 ${defineExperimentMessages}
 
 experimentMessages
 """.addImports
 
-    eval[Seq[ExperimentJsonAndTypeName]](source)
+    eval[Seq[JSONAndTypeName]](source)
   }
 }
 
