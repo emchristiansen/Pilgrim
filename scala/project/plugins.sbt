@@ -1,6 +1,6 @@
 addSbtPlugin("org.ensime" % "ensime-sbt-cmd" % "0.0.10")
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.8.5")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.8.7-SNAPSHOT")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.1.0")
 

@@ -83,70 +83,60 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
 }
 
 object Util {
-  //  def mkTable(
-  //    writeImages: Boolean,
-  //    capstonesAndJson: Seq[Seq[(Capstone, JsValue)]])(
-  //      implicit runtime: RuntimeConfig,
-  //      sparkContext: SparkContext) {
-  //    val capstones = capstonesAndJson.map(_.map(_._1))
-  //    val tableTitles = {
-  //      val jsons = capstonesAndJson.map(_.map(_._2))
-  //      TableTitles(jsons)
-  //    }
-  //
-  //    val rowSize = capstones.head.size
-  //
-  //    val experimentsTable = {
-  //      // Run the experiments and write the results to disk.
-  //      runCapstones(writeImages, capstones.flatten)
-  //      // Rerun the experiments to load from disk.
-  //      val summaries = capstones.flatten.toIndexedSeq.map(_.apply(writeImages, runtime)).grouped(rowSize).toIndexedSeq
-  //      Table(tableTitles.title, tableTitles.rowLabels, tableTitles.columnLabels, summaries.toMatrix)
-  //    }
-  //
-  //    sparkContext.stop
-  //
-  //    // Make a table for each numeric summary option.
-  //    val summaryNames =
-  //      experimentsTable.entries(0, 0).summaryNumbers.keys
-  //    for (summaryName <- summaryNames) {
-  //      println("Making table for %s".format(summaryName))
-  //      val entriesSeqSeq = experimentsTable.entries.toSeqSeq.flatten.par
-  //      val mappedSeqSeq = entriesSeqSeq.map(_.summaryNumbers(summaryName).apply)
-  //      val entries = mappedSeqSeq.toIndexedSeq.grouped(rowSize).toIndexedSeq.toMatrix
-  //
-  //      def writeTable(table: Table[Double]) {
-  //        println("Table title is %s".format(table.title))
-  //        println("Writing table to %s".format(table.path))
-  //        val tsv = table.toTSV(_.formatted("%.2f"))
-  //        FileUtils.writeStringToFile(table.path, tsv)
-  //      }
-  //
-  //      val absoluteTable = experimentsTable.copy(
-  //        title = experimentsTable.title + "_" + summaryName,
-  //        entries = entries)
-  //
-  //      val relativeTable = experimentsTable.copy(
-  //        title = experimentsTable.title + "_" + summaryName + "_normalized",
-  //        entries = entries).normalizeColumns
-  //
-  //      writeTable(absoluteTable)
-  //      writeTable(relativeTable)
-  //    }
-  //  }
+  // TODO: Get experiments from results.
+  // TODO: Get summaries remotely.
+  def mkTable(
+    writeImages: Boolean,
+    experimentsJson: Seq[Seq[JSONAndTypeName]],
+    summariesJson: Seq[Seq[JSONAndTypeName]])(
+      implicit imports: Imports,
+      runtime: RuntimeConfig) {
+    val tableTitles = {
+      val jsons = experimentsJson.map(_.map(_.json))
+      TableTitles(jsons)
+    }
 
-  //  def runCapstones(
-  //    writeImages: Boolean,
-  //    capstones: Seq[Capstone])(
-  //      implicit runtimeConfig: RuntimeConfig,
-  //      sparkContext: SparkContext) {
-  //    // Evenly spread the work across the workers (in expectation).
-  //    val shuffled = new Random(0).shuffle(capstones)
-  //    sparkContext.parallelize(shuffled).foreach(_(writeImages, runtimeConfig))
-  //  }
+    val rowSize = experimentsJson.head.size
 
-  //  def runExperiments(
-  //    )
+    val experimentsTable = {
+      val summaries = summariesJson.par.map(_.map(json =>
+        eval[ExperimentSummary](json.toSource.addImports))).toIndexedSeq
+
+      Table(
+        tableTitles.title,
+        tableTitles.rowLabels,
+        tableTitles.columnLabels,
+        summaries.toMatrix)
+    }
+
+    // Make a table for each numeric summary option.
+    val summaryNames =
+      experimentsTable.entries(0, 0).summaryNumbers.keys
+    for (summaryName <- summaryNames) {
+      println("Making table for %s".format(summaryName))
+      val entriesSeqSeq = experimentsTable.entries.toSeqSeq.flatten.par
+      val mappedSeqSeq = entriesSeqSeq.map(_.summaryNumbers(summaryName))
+      val entries = mappedSeqSeq.toIndexedSeq.grouped(rowSize).toIndexedSeq.toMatrix
+
+      def writeTable(table: Table[Double]) {
+        println("Table title is %s".format(table.title))
+        println("Writing table to %s".format(table.path))
+        val tsv = table.toTSV(_.formatted("%.2f"))
+        FileUtils.writeStringToFile(table.path, tsv)
+      }
+
+      val absoluteTable = experimentsTable.copy(
+        title = experimentsTable.title + "_" + summaryName,
+        entries = entries)
+
+      val relativeTable = experimentsTable.copy(
+        title = experimentsTable.title + "_" + summaryName + "_normalized",
+        entries = entries).normalizeColumns
+
+      writeTable(absoluteTable)
+      writeTable(relativeTable)
+    }
+  }
 
   val defineTable = """
   val experimentTable = {
@@ -194,34 +184,54 @@ object Util {
   }
 """
 
-  //  val runExperiments = """
-  //  {
-  //    // This is the same as "flatten".
-  //    val experiments = experimentTable flatMap identity
-  //
-  //    object constructJSONAndTypeName extends Poly1 {
-  //      implicit def default[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeTag, R] =
-  //        at[E] { experiment =>
-  //          JSONAndTypeName(
-  //            experiment.toJson,
-  //            instanceToTypeName(experiment))
-  //        }
-  //    }
-  //
-  //    val experimentMessages: Seq[JSONAndTypeName] =
-  //      (experiments map constructJSONAndTypeName) toList
-  //
-  //    val shuffled = new scala.util.Random(0).shuffle(experimentMessages)
-  //    shuffled.foreach(typecheckExperiment)
-  //    //sparkContext.parallelize(List(1, 2, 3)).foreach(println)
-  //    //sparkContext.parallelize(shuffled).foreach(runExperiment)
-  //  }
-  //"""
+  val defineExperimentMessageTable = """
+  val experimentMessageTable: Seq[Seq[JSONAndTypeName]] = {
+    val rowLabels = HListUtil.mkTuple2(imageClasses, otherImages)
+    val columnLabels = HListUtil.mkTuple3(detectors, extractors, matchers)
 
-  def getExperimentMessages(
+    object makeTable extends Poly1 {
+      implicit def default = at[(String, Int)] {
+        case (imageClass, otherImage) =>
+          object constructExperiment extends Poly1 {
+            implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F] = at[(D, E, M)] {
+              case (detector, extractor, matcher) => {
+                WideBaselineExperiment(
+                  imageClass,
+                  otherImage,
+                  detector,
+                  extractor,
+                  matcher)
+              }
+            }
+          }
+
+          // This lifting, combined with flatMap, filters out types that can't be used                                                                                                                                                                                                             
+          // to construct experiments.                                                                                                                                                                                                                                                             
+          object constructExperimentLifted extends Lift1(constructExperiment)
+
+          val experiments = columnLabels flatMap constructExperimentLifted
+
+          object constructJSONAndTypeName extends Poly1 {
+            implicit def default[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeTag, R] =
+              at[E] { experiment =>
+                JSONAndTypeName(
+                  experiment.toJson,
+                  instanceToTypeName(experiment))
+              }
+          }
+
+          (experiments map constructJSONAndTypeName) toList
+      }
+    }
+
+    (rowLabels map makeTable) toList
+  }    
+"""
+
+  def getExperimentMessageTable(
     runtimeConfig: RuntimeConfig,
     experimentParametersSource: String)(
-      implicit imports: Imports): Seq[JSONAndTypeName] = {
+      implicit imports: Imports): Seq[Seq[JSONAndTypeName]] = {
     val source = s"""
 loadOpenCV
 
@@ -234,17 +244,44 @@ implicit val runtimeConfig = ${getSource(runtimeConfig)}
 // extractors: HList[_ <% Extractor[_]]
 // matchers: HList[_ <% Matcher[_]]
 ${experimentParametersSource}
-
+   
 // Defines:
-// experimentTable: HList[HList[_ <% WideBaselineExperiment[...]]]
-${defineTable}
-    
-// Defines:
-// experimentMessages: Seq[JSONAndTypeName]
-${defineExperimentMessages}
+// experimentMessageTable: Seq[Seq[JSONAndTypeName]]
+${defineExperimentMessageTable}
 
-experimentMessages
+experimentMessageTable
 """.addImports
+
+    eval[Seq[Seq[JSONAndTypeName]]](source)
+  }
+
+  def getExperimentMessages(
+    runtimeConfig: RuntimeConfig,
+    experimentParametersSource: String)(
+      implicit imports: Imports): Seq[JSONAndTypeName] = {
+    val source = s"""
+  loadOpenCV
+  
+  implicit val runtimeConfig = ${getSource(runtimeConfig)}
+        
+  // Defines:
+  // imageClasses: HList[String]
+  // otherImages: HList[Int]
+  // detectors: HList[_ <% PairDetector]
+  // extractors: HList[_ <% Extractor[_]]
+  // matchers: HList[_ <% Matcher[_]]
+  ${experimentParametersSource}
+  
+  // Defines:
+  // experimentTable: HList[HList[_ <% WideBaselineExperiment[...]]]
+  ${defineTable}
+      
+  // Defines:
+  // experimentMessages: Seq[JSONAndTypeName]
+  ${defineExperimentMessages}
+  
+  experimentMessages
+  """.addImports
 
     eval[Seq[JSONAndTypeName]](source)
   }
@@ -273,33 +310,63 @@ object Main {
       "reflect.runtime.universe._",
       "spray.json._",
       "billy.summary._",
-      "billy.detectors._")
+      "billy.detectors._",
+      "billy.extractors._",
+      "billy.matchers._")
 
     implicit val runtimeConfig =
       eval[RuntimeConfig](
         FileUtils.readFileToString(args.runtimeConfigFile()).addImports)
 
+    val sparkContext = if (args.sparkContextFile.isDefined) {
+      val sparkContext = eval[SparkContext](
+        FileUtils.readFileToString(args.sparkContextFile()).addImports)
+      Some(sparkContext)
+    } else None
+
     for (file <- args.tableConfigFiles()) {
       val experimentParametersSource = FileUtils.readFileToString(file)
 
-      val experimentMessages = Util.getExperimentMessages(
+      val experimentMessageTable = Util.getExperimentMessageTable(
         runtimeConfig,
-        experimentParametersSource)
+        experimentParametersSource).transpose
+      val experimentMessages = experimentMessageTable.flatten
 
       println(s"Running ${experimentMessages.size} experiments")
-        
-      if (args.sparkContextFile.isDefined) {
-        val sparkContext = eval[SparkContext](
-          FileUtils.readFileToString(args.sparkContextFile()).addImports)
-          
+
+      val resultMessages: Seq[JSONAndTypeName] = sparkContext match {
+        case Some(sparkContext) =>
           // Shuffle the experiments to provide better expected load
           // distribution.
           val shuffled = new Random(0).shuffle(experimentMessages)
-          sparkContext.parallelize(shuffled).foreach(runExperiment)
-      } else {
-        experimentMessages.par.foreach(runExperiment)
+          sparkContext.parallelize(shuffled).map(runExperiment).collect
+        case None =>
+          experimentMessages.par.map(runExperiment).toIndexedSeq
       }
+      
+      val summaryMessages: Seq[JSONAndTypeName] = sparkContext match {
+        case Some(sparkContext) =>
+          // Shuffle the experiments to provide better expected load
+          // distribution.
+          val shuffled = new Random().shuffle(resultMessages)
+          sparkContext.parallelize(shuffled).map(getSummary).collect
+        case None =>
+          resultMessages.par.map(getSummary).toIndexedSeq
+      }
+
+      val summaryMessageTable =
+        summaryMessages.grouped(experimentMessageTable.head.size).toSeq      
+      
+//      val resultMessageTable =
+//        resultMessages.grouped(experimentMessageTable.head.size).toSeq
+
+      Util.mkTable(
+        args.writeImages(),
+        experimentMessageTable,
+        summaryMessageTable)
     }
+
+    sparkContext foreach (_.stop)
 
     //    if (args.tableConfigFiles.isDefined) {
     //      for (file <- args.tableConfigFiles()) {

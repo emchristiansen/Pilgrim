@@ -18,11 +18,14 @@ object PilgrimBuild extends Build {
     )
   )
 
-  val scalaVersionName = "2.10.1-RC3"
+  val scalaVersionName = "2.10.1"
+
+  def sparkDependency = Seq(libraryDependencies += "org.spark-project" %% "spark-core" % "0.7.0-SNAPSHOT")
+
+  def sparkDependencyProvided = Seq(libraryDependencies += "org.spark-project" %% "spark-core" % "0.7.0-SNAPSHOT" % "provided")
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
-      "org.spark-project" %% "spark-core" % "0.7.0-SNAPSHOT",
       "opencv" % "opencv" % "2.4.9",
       "nebula" %% "nebula" % "0.1-SNAPSHOT",
       "billy" %% "billy" % "0.1-SNAPSHOT",
@@ -69,9 +72,15 @@ object PilgrimBuild extends Build {
     assemblySettings ++
     SbtStartScript.startScriptForJarSettings
 
-  val projectName = "Pilgrim"
   lazy val root = {
-    val settings = libSettings ++ Seq(name := projectName, fork := true)
+    val projectName = "PilgrimWithSpark"
+    val settings = libSettings ++ Seq(name := projectName, fork := true) ++ sparkDependency
+    Project(id = projectName, base = file("."), settings = settings)
+  }
+
+  lazy val providedRoot = {
+    val projectName = "Pilgrim"
+    val settings = libSettings ++ Seq(name := projectName, fork := true) ++ sparkDependencyProvided
     Project(id = projectName, base = file("."), settings = settings)
   }
 }
