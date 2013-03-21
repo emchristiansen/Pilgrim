@@ -26,6 +26,7 @@ object PilgrimBuild extends Build {
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
+      "loadopencv" % "loadopencv_2.9.2" % "0.1-SNAPSHOT",
       "opencv" % "opencv" % "2.4.9",
       "nebula" %% "nebula" % "0.1-SNAPSHOT",
       "billy" %% "billy" % "0.1-SNAPSHOT",

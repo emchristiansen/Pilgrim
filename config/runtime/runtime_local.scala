@@ -1,6 +1,6 @@
 RuntimeConfig(
   dataRoot = homeDirectory + "data",
-  outputRoot = homeDirectory + "Dropbox/t/2013_q1/pilgrim",
+  outputRoot = homeDirectory + "outputRoot",
   tempDirectory = None,
   deleteTemporaryFiles = true,
   skipCompletedExperiments = true)

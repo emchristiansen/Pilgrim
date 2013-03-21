@@ -76,6 +76,11 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
     required = true,
     default = Some(Nil)) map (_ map ExistingFile.apply)
 
+  val parameterSweep = opt[Boolean](
+    descr = "Whether to perform a parameter sweep for the NCCLogPolar descriptor.",
+    required = false,
+    default = Some(false))
+
   val writeImages = opt[Boolean](
     descr = "If true, will generate summary images.",
     required = false,
@@ -289,8 +294,6 @@ experimentMessageTable
 
 object Main {
   def main(unparsedArgs: Array[String]) {
-    //        println(Foo.answer)
-
     val args = new Conf(unparsedArgs)
     println(args.summary)
 
@@ -309,6 +312,7 @@ object Main {
       "billy.DetectorJsonProtocol._",
       "reflect.runtime.universe._",
       "spray.json._",
+      "spray.json.DefaultJsonProtocol._",
       "billy.summary._",
       "billy.detectors._",
       "billy.extractors._",
@@ -318,12 +322,31 @@ object Main {
       eval[RuntimeConfig](
         FileUtils.readFileToString(args.runtimeConfigFile()).addImports)
 
-    val sparkContext = if (args.sparkContextFile.isDefined) {
-      val sparkContext = eval[SparkContext](
-        FileUtils.readFileToString(args.sparkContextFile()).addImports)
+    val sparkContext = if (args.sparkContextFile.isDefined) {     
+      val sparkContextSource = 
+        FileUtils.readFileToString(args.sparkContextFile())
+      
+      val sparkContext = eval[SparkContext](sparkContextSource.addImports)
+      
       Some(sparkContext)
     } else None
 
+//    if (args.sparkContextFile.isDefined) {
+//      trait MyTrait {
+//        def bar: String
+//      }
+//      
+//      implicit class IntToMyTrait(self: Int) extends MyTrait {
+//        override def bar = s"int_${self}"
+//      }
+//      
+//      implicit val int: Int = 5
+//      
+//      def foo(x: Int)(implicit int: Int) = x + int
+//      
+//      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
+//    }
+    
     for (file <- args.tableConfigFiles()) {
       val experimentParametersSource = FileUtils.readFileToString(file)
 
@@ -343,7 +366,7 @@ object Main {
         case None =>
           experimentMessages.par.map(runExperiment).toIndexedSeq
       }
-      
+
       val summaryMessages: Seq[JSONAndTypeName] = sparkContext match {
         case Some(sparkContext) =>
           // Shuffle the experiments to provide better expected load
@@ -354,11 +377,9 @@ object Main {
           resultMessages.par.map(getSummary).toIndexedSeq
       }
 
+      // TODO: Bug: The order has been messed up by the previous shuffles.
       val summaryMessageTable =
-        summaryMessages.grouped(experimentMessageTable.head.size).toSeq      
-      
-//      val resultMessageTable =
-//        resultMessages.grouped(experimentMessageTable.head.size).toSeq
+        summaryMessages.grouped(experimentMessageTable.head.size).toSeq
 
       Util.mkTable(
         args.writeImages(),
@@ -366,17 +387,94 @@ object Main {
         summaryMessageTable)
     }
 
-    sparkContext foreach (_.stop)
+    if (args.parameterSweep()) {
+      loadOpenCV
 
-    //    if (args.tableConfigFiles.isDefined) {
-    //      for (file <- args.tableConfigFiles()) {
-    //        val expression = FileUtils.readFileToString(file).addImports(imports)
-    //        val capstonesAndJsons = eval[Seq[Seq[(Capstone, JsValue)]]](expression)
-    //        
-    //        Util.runCapstones(false, Seq(capstonesAndJsons.head.head._1))
-    //        
-    ////        Util.mkTable(args.writeImages(), capstonesAndJsons)
-    //      }
-    //    }
+      case class ParameterSetting(
+        minRadius: Double,
+        maxRadius: Double,
+        numScales: Int,
+        numAngles: Int,
+        blurWidth: Double,
+        scaleSearchRadiusFactor: Double)
+
+      val parameterSettings = for (
+        minRadius <- Seq(1, 2, 3, 4);
+        maxRadius <- Seq(8, 16, 24, 32);
+        numScales <- Seq(2, 4, 8, 16, 32);
+        numAngles <- Seq(2, 4, 8, 16, 32);
+        blurWidth <- Seq(0.2, 0.4, 0.8, 1.6, 3.2);
+        scaleSearchRadiusFactor <- Seq(0, 0.2, 0.4, 0.6, 0.8)
+      ) yield ParameterSetting(
+        minRadius,
+        maxRadius,
+        numScales,
+        numAngles,
+        blurWidth,
+        scaleSearchRadiusFactor)
+
+      
+      val shuffled = new scala.util.Random().shuffle(parameterSettings)
+      val results = for (ParameterSetting(
+        minRadius,
+        maxRadius,
+        numScales,
+        numAngles,
+        blurWidth,
+        scaleSearchRadiusFactor) <- shuffled) yield {
+        val fastDetector = BoundedPairDetector(
+          BoundedDetector(OpenCVDetector.FAST, 5000),
+          200)
+        val siftDetector = BoundedPairDetector(
+          BoundedDetector(OpenCVDetector.SIFT, 5000),
+          200)
+
+        val extractor = new contrib.NCCLogPolarExtractor(
+          minRadius,
+          maxRadius,
+          numScales,
+          numAngles,
+          blurWidth)
+
+        val scaleSearchRadius = (numScales * scaleSearchRadiusFactor).floor.toInt
+        val matcher = new contrib.NCCLogPolarMatcher(scaleSearchRadius)
+
+        val fast = (imageClass: String, otherImage: Int) =>
+          WideBaselineExperiment(
+            imageClass,
+            otherImage,
+            fastDetector,
+            extractor,
+            matcher)
+        val fastAccuracy: Double = CompareMethods.relativeBenchmark(fast)
+
+        val sift = (imageClass: String, otherImage: Int) =>
+          WideBaselineExperiment(
+            imageClass,
+            otherImage,
+            siftDetector,
+            extractor,
+            matcher)
+        val siftAccuracy: Double = CompareMethods.relativeBenchmark(sift)
+
+        val commonParams = List[String](
+          minRadius.toString,
+          maxRadius.toString,
+          numScales.toString,
+          numAngles.toString,
+          blurWidth.toString,
+          scaleSearchRadiusFactor.toString)
+
+        val fastName = "fast" :: commonParams
+        val siftName = "sift" :: commonParams
+
+        Seq((fastAccuracy, fastName), (siftAccuracy, siftName))
+      }
+
+      val sorted = results.flatten.sortBy(_._1).reverse
+      sorted foreach println
+    }
+
+    sparkContext foreach (_.stop)
   }
 }
