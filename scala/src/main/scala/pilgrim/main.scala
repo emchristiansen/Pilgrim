@@ -104,8 +104,9 @@ object Util {
     val rowSize = experimentsJson.head.size
 
     val experimentsTable = {
-      val summaries = summariesJson.par.map(_.map(json =>
-        eval[ExperimentSummary](json.toSource.addImports))).toIndexedSeq
+      val summaries = summariesJson.map(_.map { json =>
+        eval[ExperimentSummary](json.toSource.addImports)
+      }).toIndexedSeq
 
       Table(
         tableTitles.title,
@@ -322,31 +323,33 @@ object Main {
       eval[RuntimeConfig](
         FileUtils.readFileToString(args.runtimeConfigFile()).addImports)
 
-    val sparkContext = if (args.sparkContextFile.isDefined) {     
-      val sparkContextSource = 
+    val sparkContext = if (args.sparkContextFile.isDefined) {
+      val sparkContextSource =
         FileUtils.readFileToString(args.sparkContextFile())
-      
+
       val sparkContext = eval[SparkContext](sparkContextSource.addImports)
-      
+
       Some(sparkContext)
     } else None
 
-//    if (args.sparkContextFile.isDefined) {
-//      trait MyTrait {
-//        def bar: String
-//      }
-//      
-//      implicit class IntToMyTrait(self: Int) extends MyTrait {
-//        override def bar = s"int_${self}"
-//      }
-//      
-//      implicit val int: Int = 5
-//      
-//      def foo(x: Int)(implicit int: Int) = x + int
-//      
-//      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
-//    }
-    
+    if (args.sparkContextFile.isDefined) {
+      trait MyTrait {
+        def bar: String
+      }
+
+      implicit class IntToMyTrait(self: Int) extends MyTrait {
+        override def bar = s"int_${self}"
+      }
+
+      implicit val int: Int = 5
+
+      def foo(x: Int)(implicit int: Int) = x + int
+
+      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
+
+      println("\n\n" + results.collect.toList + "\n\n")
+    }
+
     for (file <- args.tableConfigFiles()) {
       val experimentParametersSource = FileUtils.readFileToString(file)
 
@@ -359,25 +362,29 @@ object Main {
 
       val resultMessages: Seq[JSONAndTypeName] = sparkContext match {
         case Some(sparkContext) =>
-          // Shuffle the experiments to provide better expected load
-          // distribution.
-          val shuffled = new Random(0).shuffle(experimentMessages)
-          sparkContext.parallelize(shuffled).map(runExperiment).collect
+          sparkContext.parallelize(experimentMessages).map(runExperiment).collect
+        // Shuffle the experiments to provide better expected load
+        // distribution.
+        //          val shuffled = new Random(0).shuffle(experimentMessages)
+        //          sparkContext.parallelize(shuffled).map(runExperiment).collect
+        //          sparkContext.parallelize(shuffled).map(x => x).collect
         case None =>
           experimentMessages.par.map(runExperiment).toIndexedSeq
       }
 
       val summaryMessages: Seq[JSONAndTypeName] = sparkContext match {
         case Some(sparkContext) =>
-          // Shuffle the experiments to provide better expected load
-          // distribution.
-          val shuffled = new Random().shuffle(resultMessages)
-          sparkContext.parallelize(shuffled).map(getSummary).collect
+          sparkContext.parallelize(resultMessages).map(getSummary).collect
+        // Shuffle the experiments to provide better expected load
+        // distribution.
+        //          val shuffled = new Random().shuffle(resultMessages)
+        //          sparkContext.parallelize(shuffled).map(getSummary).collect
         case None =>
           resultMessages.par.map(getSummary).toIndexedSeq
       }
 
-      // TODO: Bug: The order has been messed up by the previous shuffles.
+      sparkContext foreach (_.stop)
+
       val summaryMessageTable =
         summaryMessages.grouped(experimentMessageTable.head.size).toSeq
 
@@ -413,15 +420,16 @@ object Main {
         blurWidth,
         scaleSearchRadiusFactor)
 
-      
       val shuffled = new scala.util.Random().shuffle(parameterSettings)
-      val results = for (ParameterSetting(
-        minRadius,
-        maxRadius,
-        numScales,
-        numAngles,
-        blurWidth,
-        scaleSearchRadiusFactor) <- shuffled) yield {
+      val results = for (
+        ParameterSetting(
+          minRadius,
+          maxRadius,
+          numScales,
+          numAngles,
+          blurWidth,
+          scaleSearchRadiusFactor) <- shuffled
+      ) yield {
         val fastDetector = BoundedPairDetector(
           BoundedDetector(OpenCVDetector.FAST, 5000),
           200)
@@ -475,6 +483,6 @@ object Main {
       sorted foreach println
     }
 
-    sparkContext foreach (_.stop)
+    //    sparkContext foreach (_.stop)
   }
 }
