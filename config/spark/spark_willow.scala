@@ -1,5 +1,5 @@
 // This is in MB.
-System.setProperty("spark.akka.frameSize", "1000")
+//System.setProperty("spark.akka.frameSize", "1000")
 
 val environment = Map(
 //  "SPARK_LIBRARY_PATH" -> "/usr/local/lib",

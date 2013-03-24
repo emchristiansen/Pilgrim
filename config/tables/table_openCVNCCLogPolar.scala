@@ -13,10 +13,10 @@ val otherImages = 2 :: 3 :: 4 :: 5 :: 6 :: HNil
 
 val fastDetector = BoundedPairDetector(
   BoundedDetector(OpenCVDetector.FAST, 5000),
-  100)
+  101)
 val siftDetector = BoundedPairDetector(
   BoundedDetector(OpenCVDetector.SIFT, 5000),
-  100)
+  101)
 //val detectors = fastDetector :: siftDetector :: HNil
 val detectors = fastDetector :: HNil
 

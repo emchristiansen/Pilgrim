@@ -26,8 +26,11 @@ object PilgrimBuild extends Build {
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
+      "org.json4s" %% "json4s-native" % "3.1.0",
+      "com.google.caliper" % "caliper" % "0.5-rc1",
       "loadopencv" % "loadopencv_2.9.2" % "0.1-SNAPSHOT",
       "opencv" % "opencv" % "2.4.9",
+      "spyplot" %% "spyplot" % "0.1-SNAPSHOT",
       "nebula" %% "nebula" % "0.1-SNAPSHOT",
       "billy" %% "billy" % "0.1-SNAPSHOT",
       "skunkworks" %% "skunkworks" % "0.1-SNAPSHOT",
