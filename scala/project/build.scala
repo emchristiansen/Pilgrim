@@ -55,6 +55,9 @@ object PilgrimBuild extends Build {
     )
   )
 
+  def updateOnDependencyChange = Seq(
+    watchSources <++= (managedClasspath in Test) map { cp => cp.files })
+
   def scalaSettings = Seq(
     scalaVersion := scalaVersionName,
     scalacOptions ++= Seq(
@@ -74,7 +77,8 @@ object PilgrimBuild extends Build {
     extraLibraryDependencies ++
     scalaSettings ++
     assemblySettings ++
-    SbtStartScript.startScriptForJarSettings
+    SbtStartScript.startScriptForJarSettings ++
+    updateOnDependencyChange
 
   lazy val root = {
     val projectName = "PilgrimWithSpark"

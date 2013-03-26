@@ -110,7 +110,7 @@ classdef NCCLogPolarFeatureExtractor < helpers.GenericInstaller ...
       % Get the input image
       img = imread(imagePath);
       
-      extractor = org.opencv.contrib.NCCLogPolarExtractor(2, 32, 32, 32, 2);      
+      extractor = org.opencv.contrib.NCCLogPolarExtractor(4, 32, 8, 16, 0.8);      
       
       matOfKeyPoint = framesToKeyPoints(frames);
       imageMat = imageToMat(img);

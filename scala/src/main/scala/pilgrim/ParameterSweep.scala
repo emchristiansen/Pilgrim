@@ -75,69 +75,58 @@ object ParameterSweep {
       numScales: Int,
       numAngles: Int,
       blurWidth: Double,
-      scaleSearchRadiusFactor: Double)
+      scaleSearchRadiusFactor: Double)      
 
-    //      val parameterSettings = for (
-    //        minRadius <- Seq(1, 2, 3, 4);
-    //        maxRadius <- Seq(8, 16, 24, 32);
-    //        numScales <- Seq(2, 4, 8, 16, 32);
-    //        numAngles <- Seq(2, 4, 8, 16, 32);
-    //        blurWidth <- Seq(0.2, 0.4, 0.8, 1.6, 3.2);
-    //        scaleSearchRadiusFactor <- Seq(0, 0.2, 0.4, 0.6, 0.8)
-    //      ) yield ParameterSetting(
-    //        minRadius,
-    //        maxRadius,
-    //        numScales,
-    //        numAngles,
-    //        blurWidth,
-    //        scaleSearchRadiusFactor)
-
-    //      val parameterSettings = for (
-    //        minRadius <- Seq(1, 2, 4);
-    //        maxRadius <- Seq(8, 16, 32);
-    //        numScales <- Seq(8, 16, 32);
-    //        numAngles <- Seq(8, 16, 32);
-    //        blurWidth <- Seq(0.4, 0.8, 1.6);
-    //        scaleSearchRadiusFactor <- Seq(0, 0.3, 0.6)
-    //      ) yield ParameterSetting(
-    //        minRadius,
-    //        maxRadius,
-    //        numScales,
-    //        numAngles,
-    //        blurWidth,
-    //        scaleSearchRadiusFactor)
-
-    //      val parameterSettings = for (
-    //        minRadius <- Seq(2, 4);
-    //        maxRadius <- Seq(16, 32);
-    //        numScales <- Seq(16, 32);
-    //        numAngles <- Seq(16, 32);
-    //        blurWidth <- Seq(0.8, 1.6);
-    //        scaleSearchRadiusFactor <- Seq(0.3, 0.6)
-    //      ) yield ParameterSetting(
-    //        minRadius,
-    //        maxRadius,
-    //        numScales,
-    //        numAngles,
-    //        blurWidth,
-    //        scaleSearchRadiusFactor)         
-
+//    val parameterSettings = for (
+//      //      minRadius <- Seq(1, 2, 4);
+//      minRadius <- Seq(1, 2, 3, 4, 5);
+//      maxRadius <- Seq(32);
+//      numScales <- Seq(4, 8, 16, 32);
+//      numAngles <- Seq(8, 16, 32);
+//      blurWidth <- Seq(0.8, 1.0);
+//      //              scaleSearchRadiusFactor <- Seq(0.3, 0.6)
+//      scaleSearchRadiusFactor <- Seq(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+//    ) yield ParameterSetting(
+//      minRadius,
+//      maxRadius,
+//      numScales,
+//      numAngles,
+//      blurWidth,
+//      scaleSearchRadiusFactor)
+      
     val parameterSettings = for (
-//      minRadius <- Seq(1, 2, 4);
-      minRadius <- Seq(0.5, 1, 2);
+      //      minRadius <- Seq(1, 2, 4);
+      minRadius <- Seq(2, 3, 4, 5);
       maxRadius <- Seq(32);
-      numScales <- Seq(4, 8, 16, 32);
-      numAngles <- Seq(8, 16, 32);
-      blurWidth <- Seq(1.0);
-//              scaleSearchRadiusFactor <- Seq(0.3, 0.6)
-      scaleSearchRadiusFactor <- Seq(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+      numScales <- Seq(4, 8, 16);
+      numAngles <- Seq(16, 32, 64);
+      blurWidth <- Seq(0.6, 0.8, 1.0, 1.2);
+//      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
+      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)      
     ) yield ParameterSetting(
       minRadius,
       maxRadius,
       numScales,
       numAngles,
       blurWidth,
-      scaleSearchRadiusFactor)
+      scaleSearchRadiusFactor)      
+      
+//    val parameterSettings = for (
+//      //      minRadius <- Seq(1, 2, 4);
+//      minRadius <- Seq(4);
+//      maxRadius <- Seq(32);
+//      numScales <- Seq(8);
+//      numAngles <- Seq(16);
+//      blurWidth <- Seq(0.8);
+////      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
+//      scaleSearchRadiusFactor <- Seq(0.5)      
+//    ) yield ParameterSetting(
+//      minRadius,
+//      maxRadius,
+//      numScales,
+//      numAngles,
+//      blurWidth,
+//      scaleSearchRadiusFactor)       
 
     //      val shuffled = new scala.util.Random().shuffle(parameterSettings)
     val incompleteExperimentsUnflat = for (
@@ -149,18 +138,23 @@ object ParameterSweep {
         blurWidth,
         scaleSearchRadiusFactor) <- parameterSettings
     ) yield {
+      val maxKeyPoints = 100
+      
       val fastDetector = BoundedPairDetector(
-        BoundedDetector(OpenCVDetector.FAST, 2000),
-        100)
+        BoundedDetector(OpenCVDetector.FAST, 20 * maxKeyPoints),
+        maxKeyPoints)
       val siftDetector = BoundedPairDetector(
-        BoundedDetector(OpenCVDetector.SIFT, 2000),
-        100)
+        BoundedDetector(OpenCVDetector.SIFT, 20 * maxKeyPoints),
+        maxKeyPoints)
       val briskDetector = BoundedPairDetector(
-        BoundedDetector(OpenCVDetector.BRISK, 2000),
-        100)
+        BoundedDetector(OpenCVDetector.BRISK, 20 * maxKeyPoints),
+        maxKeyPoints)
       val orbDetector = BoundedPairDetector(
-        BoundedDetector(OpenCVDetector.ORB, 2000),
-        100)
+        BoundedDetector(OpenCVDetector.ORB, 20 * maxKeyPoints),
+        maxKeyPoints)
+      val surfDetector = BoundedPairDetector(
+        BoundedDetector(OpenCVDetector.SURF, 20 * maxKeyPoints),
+        maxKeyPoints)
 
       val extractor = new contrib.NCCLogPolarExtractor(
         minRadius,
@@ -173,7 +167,7 @@ object ParameterSweep {
       val matcher = new contrib.NCCLogPolarMatcher(scaleSearchRadius)
 
       ////////////////////////
-      
+
       val fast = IncompleteWideBaselineExperiment(
         fastDetector,
         extractor,
@@ -191,6 +185,11 @@ object ParameterSweep {
 
       val orb = IncompleteWideBaselineExperiment(
         orbDetector,
+        extractor,
+        matcher)
+
+      val surf = IncompleteWideBaselineExperiment(
+        surfDetector,
         extractor,
         matcher)
 
@@ -226,11 +225,20 @@ object ParameterSweep {
           extractor,
           matcher)
 
+      val surfClosure = (imageClass: String, otherImage: Int) =>
+        WideBaselineExperiment(
+          imageClass,
+          otherImage,
+          surfDetector,
+          extractor,
+          matcher)
+
       Seq(
         (CompareMethods.relativeBenchmarkSources(fastClosure), fast.toJson, parameterSetting),
         (CompareMethods.relativeBenchmarkSources(siftClosure), sift.toJson, parameterSetting),
         (CompareMethods.relativeBenchmarkSources(briskClosure), brisk.toJson, parameterSetting),
-        (CompareMethods.relativeBenchmarkSources(orbClosure), orb.toJson, parameterSetting))
+        (CompareMethods.relativeBenchmarkSources(orbClosure), orb.toJson, parameterSetting),
+        (CompareMethods.relativeBenchmarkSources(surfClosure), surf.toJson, parameterSetting))
     }
 
     val incompleteExperiments: Seq[(Seq[ScalaSource[Double]], JsValue, ParameterSetting)] =
@@ -259,43 +267,72 @@ object ParameterSweep {
     val reversed = (scores zip incompleteExperiments.map(_._2)) sortBy (_._1)
     val sortedResults = reversed reverse
 
-    sortedResults foreach println
+    //    sortedResults foreach println
 
     //////////////////////////////////
-    
+
     val sizes = incompleteExperiments.map(_._3).map { parameterSetting =>
       parameterSetting.numScales * parameterSetting.numAngles
     }
-    
+
     val jValues = incompleteExperiments.map(_._2).map { jsValue =>
       parse(jsValue.compactPrint)
     }
-    
-    val detectors = jValues map { jValue => 
+
+    val detectors = jValues map { jValue =>
       val detectorName = jValue \\ "detector" \\ "pairDetector" \\ "detector"
-      detectorName.values.toString 
+      detectorName.values.toString
     }
-    
+
+    printBestParametersForEachSize(
+      scores,
+      sizes,
+      incompleteExperiments.map(_._2))
     genAccuracyVsSpeedPlot(scores, sizes, detectors)
   }
-  
+
+  def printBestParametersForEachSize(
+    scores: Seq[Double],
+    sizes: Seq[Int],
+    jsValues: Seq[JsValue]) {
+    asserty(scores.size == sizes.size)
+    asserty(scores.size == jsValues.size)
+
+    val numToPrintForEachSize = 8
+
+    val ungrouped = (sizes, scores, jsValues) zipped
+
+    val grouped = ungrouped groupBy (_._1)
+
+    for ((size, group) <- grouped) {
+      println(s"\n\nSize is ${size}.")
+
+      val scores = group map (_._2) toList
+      val jsValues = group map (_._3) toList
+
+      val reversed = (scores zip jsValues) sortBy (_._1)
+      reversed.reverse.take(numToPrintForEachSize) foreach (println)
+    }
+  }
+
   def genAccuracyVsSpeedPlot(
     scores: Seq[Double],
     sizes: Seq[Int],
     detectors: Seq[String]) {
     asserty(scores.size == sizes.size)
     asserty(scores.size == detectors.size)
-    
+
     val sizesWithScores = sizes zip scores
-    
+
     val grouped = (detectors zip sizesWithScores) groupBy (_._1)
-    
+
     val (siftSizes, siftScores) = grouped("SIFT").map(_._2).unzip
     val (fastSizes, fastScores) = grouped("FAST").map(_._2).unzip
     val (briskSizes, briskScores) = grouped("BRISK").map(_._2).unzip
     val (orbSizes, orbScores) = grouped("ORB").map(_._2).unzip
-    
-    val plot = new SPyPlot {     
+    val (surfSizes, surfScores) = grouped("SURF").map(_._2).unzip
+
+    val plot = new SPyPlot {
       override def source = s"""     
 fig = figure()
 ax = fig.add_subplot(1,1,1)      
@@ -328,6 +365,13 @@ ax.scatter(
   c='k',
   marker='^',
   antialiased=True)
+ax.scatter(
+  ${surfSizes.toPyList}, 
+  ${surfScores.toPyList}, 
+  label='SURF detector',
+  c='m',
+  marker='<',
+  antialiased=True)  
 
 ax.set_xscale('log', basex=2)  
   
@@ -341,7 +385,7 @@ ax.grid(True)
 savefig("${plotFile}", bbox_inches='tight')
 """
     } toImage
-    
+
     ImageIO.write(plot, "png", Util.summaryDirectory + "parameterSweep.png")
   }
 }

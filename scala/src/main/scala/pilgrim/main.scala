@@ -155,25 +155,46 @@ object Main {
 
       println(s"Running ${experimentMessages.size} experiments")
 
-      val resultMessages = sparkContext match {
-        case Some(sparkContext) => Util.sparkShuffleMap(
-          sparkContext,
-          experimentMessages) {
-            runExperiment
-          }
-        case None =>
-          experimentMessages.par.map(runExperiment).toIndexedSeq
-      }
-
       val summaryMessages = sparkContext match {
         case Some(sparkContext) => Util.sparkShuffleMap(
           sparkContext,
-          resultMessages) {
-            getSummary
+          experimentMessages) { experiment =>
+            val results = runExperiment(experiment)
+            getSummary(results)
           }
         case None =>
-          resultMessages.par.map(getSummary).toIndexedSeq
+          experimentMessages.par.map(runExperiment).map(getSummary).toIndexedSeq
       }
+
+//      val summaryMessages = sparkContext match {
+//        case Some(sparkContext) => Util.sparkShuffleMap(
+//          sparkContext,
+//          resultMessages) {
+//            getSummary
+//          }
+//        case None =>
+//          resultMessages.par.map(getSummary).toIndexedSeq
+//      }      
+      
+//      val resultMessages = sparkContext match {
+//        case Some(sparkContext) => Util.sparkShuffleMap(
+//          sparkContext,
+//          experimentMessages) {
+//            runExperiment
+//          }
+//        case None =>
+//          experimentMessages.par.map(runExperiment).toIndexedSeq
+//      }
+//
+//      val summaryMessages = sparkContext match {
+//        case Some(sparkContext) => Util.sparkShuffleMap(
+//          sparkContext,
+//          resultMessages) {
+//            getSummary
+//          }
+//        case None =>
+//          resultMessages.par.map(getSummary).toIndexedSeq
+//      }
 
       val summaryMessageTable =
         summaryMessages.grouped(experimentMessageTable.head.size).toSeq
