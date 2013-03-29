@@ -1,3 +1,3 @@
 new SparkContext(
-  "local[8]", 
+  "local[1]", 
   "Pilgrim")

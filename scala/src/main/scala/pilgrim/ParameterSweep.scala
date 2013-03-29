@@ -99,7 +99,7 @@ object ParameterSweep {
       minRadius <- Seq(2, 3, 4, 5);
       maxRadius <- Seq(32);
       numScales <- Seq(4, 8, 16);
-      numAngles <- Seq(16, 32, 64);
+      numAngles <- Seq(16, 32);
       blurWidth <- Seq(0.6, 0.8, 1.0, 1.2);
 //      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
       scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)      
