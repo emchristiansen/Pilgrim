@@ -11,7 +11,7 @@ val environment = Map(
   "SPARK_CLASSPATH" -> System.getProperty("java.class.path"))
 
 new SparkContext(
-  master = "spark://10.0.4.214:7077", 
+  master = "spark://10.0.3.30:7077", 
   jobName = "Pilgrim", 
   sparkHome = "/u/echristiansen/github/spark", 
   jars = Seq(),

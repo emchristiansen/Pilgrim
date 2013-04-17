@@ -81,6 +81,31 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
     required = false,
     default = Some(false))
 
+  val oxfordRadarPlot = opt[Boolean](
+    descr = "Whether to create a radar plot for the Oxford dataset.",
+    required = false,
+    default = Some(false))
+
+  val benchmark = opt[Boolean](
+    descr = "Whether to benchmark the various methods.",
+    required = false,
+    default = Some(false))
+
+  val precisionRecall = opt[Boolean](
+    descr = "Whether to make precision-recall curves.",
+    required = false,
+    default = Some(false))
+
+  val brownTable = opt[Boolean](
+    descr = "Whether to run Brown experiments.",
+    required = false,
+    default = Some(false))
+
+  val rotationAndScalePlot = opt[Boolean](
+    descr = "Whether to create a plot of performance change with rotation and scale.",
+    required = false,
+    default = Some(false))
+
   val writeImages = opt[Boolean](
     descr = "If true, will generate summary images.",
     required = false,
@@ -166,35 +191,35 @@ object Main {
           experimentMessages.par.map(runExperiment).map(getSummary).toIndexedSeq
       }
 
-//      val summaryMessages = sparkContext match {
-//        case Some(sparkContext) => Util.sparkShuffleMap(
-//          sparkContext,
-//          resultMessages) {
-//            getSummary
-//          }
-//        case None =>
-//          resultMessages.par.map(getSummary).toIndexedSeq
-//      }      
-      
-//      val resultMessages = sparkContext match {
-//        case Some(sparkContext) => Util.sparkShuffleMap(
-//          sparkContext,
-//          experimentMessages) {
-//            runExperiment
-//          }
-//        case None =>
-//          experimentMessages.par.map(runExperiment).toIndexedSeq
-//      }
-//
-//      val summaryMessages = sparkContext match {
-//        case Some(sparkContext) => Util.sparkShuffleMap(
-//          sparkContext,
-//          resultMessages) {
-//            getSummary
-//          }
-//        case None =>
-//          resultMessages.par.map(getSummary).toIndexedSeq
-//      }
+      //      val summaryMessages = sparkContext match {
+      //        case Some(sparkContext) => Util.sparkShuffleMap(
+      //          sparkContext,
+      //          resultMessages) {
+      //            getSummary
+      //          }
+      //        case None =>
+      //          resultMessages.par.map(getSummary).toIndexedSeq
+      //      }      
+
+      //      val resultMessages = sparkContext match {
+      //        case Some(sparkContext) => Util.sparkShuffleMap(
+      //          sparkContext,
+      //          experimentMessages) {
+      //            runExperiment
+      //          }
+      //        case None =>
+      //          experimentMessages.par.map(runExperiment).toIndexedSeq
+      //      }
+      //
+      //      val summaryMessages = sparkContext match {
+      //        case Some(sparkContext) => Util.sparkShuffleMap(
+      //          sparkContext,
+      //          resultMessages) {
+      //            getSummary
+      //          }
+      //        case None =>
+      //          resultMessages.par.map(getSummary).toIndexedSeq
+      //      }
 
       val summaryMessageTable =
         summaryMessages.grouped(experimentMessageTable.head.size).toSeq
@@ -207,6 +232,27 @@ object Main {
 
     if (args.parameterSweep()) {
       ParameterSweep.run(sparkContext.get)
+    }
+
+    if (args.oxfordRadarPlot()) {
+      OxfordRadarPlot.run(sparkContext.get)
+    }
+
+    if (args.benchmark()) {
+      Timings.run
+    }
+
+    if (args.precisionRecall()) {
+      PrecisionRecall.run(sparkContext.get)
+    }
+
+    if (args.brownTable()) {
+      BrownTable.run
+    }
+    
+    if (args.rotationAndScalePlot()) {
+      sparkContext foreach (_.stop)
+      RotationAndScalePlot.run
     }
 
     sparkContext foreach (_.stop)

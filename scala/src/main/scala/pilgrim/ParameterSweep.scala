@@ -75,60 +75,65 @@ object ParameterSweep {
       numScales: Int,
       numAngles: Int,
       blurWidth: Double,
-      scaleSearchRadiusFactor: Double)      
+      scaleSearchRadiusFactor: Double)
 
-//    val parameterSettings = for (
-//      //      minRadius <- Seq(1, 2, 4);
-//      minRadius <- Seq(1, 2, 3, 4, 5);
-//      maxRadius <- Seq(32);
-//      numScales <- Seq(4, 8, 16, 32);
-//      numAngles <- Seq(8, 16, 32);
-//      blurWidth <- Seq(0.8, 1.0);
-//      //              scaleSearchRadiusFactor <- Seq(0.3, 0.6)
-//      scaleSearchRadiusFactor <- Seq(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
-//    ) yield ParameterSetting(
-//      minRadius,
-//      maxRadius,
-//      numScales,
-//      numAngles,
-//      blurWidth,
-//      scaleSearchRadiusFactor)
-      
+    //    val parameterSettings = for (
+    //      //      minRadius <- Seq(1, 2, 4);
+    //      minRadius <- Seq(1, 2, 3, 4, 5);
+    //      maxRadius <- Seq(32);
+    //      numScales <- Seq(4, 8, 16, 32);
+    //      numAngles <- Seq(8, 16, 32);
+    //      blurWidth <- Seq(0.8, 1.0);
+    //      //              scaleSearchRadiusFactor <- Seq(0.3, 0.6)
+    //      scaleSearchRadiusFactor <- Seq(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+    //    ) yield ParameterSetting(
+    //      minRadius,
+    //      maxRadius,
+    //      numScales,
+    //      numAngles,
+    //      blurWidth,
+    //      scaleSearchRadiusFactor)
+
     val parameterSettings = for (
       //      minRadius <- Seq(1, 2, 4);
-      minRadius <- Seq(2, 3, 4, 5);
+//      minRadius <- Seq(4);
+            minRadius <- Seq(2, 3, 4, 5);
       maxRadius <- Seq(32);
       numScales <- Seq(4, 8, 16);
-      numAngles <- Seq(16, 32);
-      blurWidth <- Seq(0.6, 0.8, 1.0, 1.2);
-//      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
-      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)      
+      numAngles <- Seq(8, 16, 32);
+//      blurWidth <- Seq(1.0);
+            blurWidth <- Seq(0.6, 0.8, 1.0, 1.2);
+            scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
+//      scaleSearchRadiusFactor <- Seq(0.5)
     ) yield ParameterSetting(
       minRadius,
       maxRadius,
       numScales,
       numAngles,
       blurWidth,
-      scaleSearchRadiusFactor)      
-      
-//    val parameterSettings = for (
-//      //      minRadius <- Seq(1, 2, 4);
-//      minRadius <- Seq(4);
-//      maxRadius <- Seq(32);
-//      numScales <- Seq(8);
-//      numAngles <- Seq(16);
-//      blurWidth <- Seq(0.8);
-////      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
-//      scaleSearchRadiusFactor <- Seq(0.5)      
-//    ) yield ParameterSetting(
-//      minRadius,
-//      maxRadius,
-//      numScales,
-//      numAngles,
-//      blurWidth,
-//      scaleSearchRadiusFactor)       
+      scaleSearchRadiusFactor)
+
+    //    val parameterSettings = for (
+    //      //      minRadius <- Seq(1, 2, 4);
+    //      minRadius <- Seq(4);
+    //      maxRadius <- Seq(32);
+    //      numScales <- Seq(8);
+    //      numAngles <- Seq(16);
+    //      blurWidth <- Seq(0.8);
+    ////      scaleSearchRadiusFactor <- Seq(0.3, 0.4, 0.5, 0.6, 0.7)
+    //      scaleSearchRadiusFactor <- Seq(0.5)      
+    //    ) yield ParameterSetting(
+    //      minRadius,
+    //      maxRadius,
+    //      numScales,
+    //      numAngles,
+    //      blurWidth,
+    //      scaleSearchRadiusFactor)       
 
     //      val shuffled = new scala.util.Random().shuffle(parameterSettings)
+    println(s"There are ${parameterSettings.size} experiments")
+    Thread.sleep(1000)
+
     val incompleteExperimentsUnflat = for (
       parameterSetting @ ParameterSetting(
         minRadius,
@@ -138,8 +143,14 @@ object ParameterSweep {
         blurWidth,
         scaleSearchRadiusFactor) <- parameterSettings
     ) yield {
+      //      import reflect.runtime.universe.TypeTag
+      //      import reflect.runtime.universe.typeTag
+      //      
+      //      implicit def typeTagToTypeName[A: TypeTag]: TypeName[A] =
+      //        TypeName[A](typeTag[A].tpe.toString)
+
       val maxKeyPoints = 100
-      
+
       val fastDetector = BoundedPairDetector(
         BoundedDetector(OpenCVDetector.FAST, 20 * maxKeyPoints),
         maxKeyPoints)
@@ -232,6 +243,17 @@ object ParameterSweep {
           surfDetector,
           extractor,
           matcher)
+
+      implicit val typeNameTODO_pilgrim_util_0 =
+        StaticTypeName.typeNameFromConcreteInstance(fastClosure("", 0))
+      implicit val typeNameTODO_pilgrim_util_1 =
+        StaticTypeName.typeNameFromConcreteInstance(siftClosure("", 0))
+      implicit val typeNameTODO_pilgrim_util_2 =
+        StaticTypeName.typeNameFromConcreteInstance(briskClosure("", 0))
+      implicit val typeNameTODO_pilgrim_util_3 =
+        StaticTypeName.typeNameFromConcreteInstance(orbClosure("", 0))
+      implicit val typeNameTODO_pilgrim_util_4 =
+        StaticTypeName.typeNameFromConcreteInstance(surfClosure("", 0))
 
       Seq(
         (CompareMethods.relativeBenchmarkSources(fastClosure), fast.toJson, parameterSetting),

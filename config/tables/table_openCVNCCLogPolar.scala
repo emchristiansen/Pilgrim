@@ -28,7 +28,7 @@ val extractor = new contrib.NCCLogPolarExtractor(
   32,
   8,
   16,
-  0.8)
+  1.2)
 val extractors = extractor :: OpenCVExtractor.SIFT :: OpenCVExtractor.BRIEF :: OpenCVExtractor.BRISK :: HNil
 
 val matcher = new contrib.NCCLogPolarMatcher(4)

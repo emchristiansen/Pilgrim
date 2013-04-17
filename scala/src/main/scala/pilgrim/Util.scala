@@ -61,7 +61,7 @@ import reflect._
 
 object Util {
   def summaryDirectory = 
-    homeDirectory + "Dropbox/t/2013_q1/mtcICCV2013/figs"
+    homeDirectory + "Dropbox/t/2013_q1/mtciccv2013_2/src/main/resources/figures"
   
   // TODO: Get experiments from results.
   // TODO: Get summaries remotely.
@@ -157,7 +157,7 @@ object Util {
         at[E] { experiment =>
           JSONAndTypeName(
             experiment.toJson,
-            instanceToTypeName(experiment))
+            typeTag[E].tpe.toString)
         }
     }
 
@@ -197,7 +197,7 @@ object Util {
               at[E] { experiment =>
                 JSONAndTypeName(
                   experiment.toJson,
-                  instanceToTypeName(experiment))
+                  typeTag[E].tpe.toString)
               }
           }
 
