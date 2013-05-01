@@ -79,22 +79,22 @@ object OxfordRadarPlot {
       val detector = BoundedPairDetector(
         BoundedDetector(OpenCVDetector.FAST, 5000),
         100)
-//      val patchExtractor = PatchExtractor(
-//        false,
-//        false,
-//        24,
-//        5,
-//        "Gray")
-//
-//      patchExtractor: Extractor[IndexedSeq[Int]]
-//      //      patchExtractor.toJson
-//
-//      val extractor = NormalizedExtractor(
-//        patchExtractor,
-//        PatchNormalizer.Rank)
-//
-//      extractor: Extractor[SortDescriptor]
-//      //      extractor.toJson
+      //      val patchExtractor = PatchExtractor(
+      //        false,
+      //        false,
+      //        24,
+      //        5,
+      //        "Gray")
+      //
+      //      patchExtractor: Extractor[IndexedSeq[Int]]
+      //      //      patchExtractor.toJson
+      //
+      //      val extractor = NormalizedExtractor(
+      //        patchExtractor,
+      //        PatchNormalizer.Rank)
+      //
+      //      extractor: Extractor[SortDescriptor]
+      //      //      extractor.toJson
 
       val extractor = LUCIDExtractor(
         false,
@@ -102,9 +102,9 @@ object OxfordRadarPlot {
         24,
         5,
         "Gray")
-        
+
       val matcher = VectorMatcher.L1
-//      matcher: Matcher[SortDescriptor]
+      //      matcher: Matcher[SortDescriptor]
       WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
     }
 
@@ -144,6 +144,15 @@ object OxfordRadarPlot {
       WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
     }
 
+    val sidExperiment = (imageClass: String, otherImage: Int) => {
+      val detector = BoundedPairDetector(
+        BoundedDetector(OpenCVDetector.SIFT, 5000),
+        100)
+      val extractor = SIDExtractor
+      val matcher = VectorMatcher.L2
+      WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
+    }
+
     val nccLogPolarExperiment = (imageClass: String, otherImage: Int) => {
       val detector = BoundedPairDetector(
         BoundedDetector(OpenCVDetector.SIFT, 5000),
@@ -170,17 +179,19 @@ object OxfordRadarPlot {
       StaticTypeName.typeNameFromConcreteInstance(nccLogPolarExperiment("", 0))
     implicit val typeNameTODO_pilgrim_oxford_4 =
       StaticTypeName.typeNameFromConcreteInstance(freakExperiment("", 0))
+    implicit val typeNameTODO_pilgrim_oxford_5 =
+      StaticTypeName.typeNameFromConcreteInstance(sidExperiment("", 0))
 
-//    // TODO: Delete
-//    val lE = lucidExperiment("", 0)
-//    lE.detector.toJson
-//    lE.extractor.extractor.toJson
-//    lE.extractor.normalizer.toJson
-//    val foo = normalizedExtractorJsonProtocol[]
-//    normalizedExtractorJsonProtocol(lE.extractor)
-//    
-//    lE.extractor.toJson
-//    lE.matcher.toJson
+    //    // TODO: Delete
+    //    val lE = lucidExperiment("", 0)
+    //    lE.detector.toJson
+    //    lE.extractor.extractor.toJson
+    //    lE.extractor.normalizer.toJson
+    //    val foo = normalizedExtractorJsonProtocol[]
+    //    normalizedExtractorJsonProtocol(lE.extractor)
+    //    
+    //    lE.extractor.toJson
+    //    lE.matcher.toJson
 
     def experimentToSource[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeName, R <% RuntimeConfig => ExperimentSummary](
       experiment: E)(implicit runtimeConfig: RuntimeConfig): ScalaSource[Double] = {
@@ -222,6 +233,7 @@ object OxfordRadarPlot {
         //        (experimentToSource(freakExperiment(imageClass, otherImage)), imageClass, otherImage, "freak"),
         (experimentToSource(siftExperiment(imageClass, otherImage)), imageClass, otherImage, "sift"),
         (experimentToSource(asiftExperiment(imageClass, otherImage)), imageClass, otherImage, "asift"),
+        (experimentToSource(sidExperiment(imageClass, otherImage)), imageClass, otherImage, "sid"),
         (experimentToSource(nccLogPolarExperiment(imageClass, otherImage)), imageClass, otherImage, "nccLogPolar"))
     }
 
@@ -349,54 +361,62 @@ def example_data():
     #  4)Inclusion of both gas-phase speciesis present...
     data = {
         'column names':
-            ['2', '3', '4', '5', '6'],
+            ['1:2', '1:3', '1:4', '1:5', '1:6'],
         'graffiti':
             [[${getCurve("graffiti", "lucid").mkString(", ")}],
              [${getCurve("graffiti", "brisk").mkString(", ")}],
              [${getCurve("graffiti", "sift").mkString(", ")}],
              [${getCurve("graffiti", "asift").mkString(", ")}],
+             [${getCurve("graffiti", "sid").mkString(", ")}],
              [${getCurve("graffiti", "nccLogPolar").mkString(", ")}]],
         'trees':
             [[${getCurve("trees", "lucid").mkString(", ")}],
              [${getCurve("trees", "brisk").mkString(", ")}],
              [${getCurve("trees", "sift").mkString(", ")}],
              [${getCurve("trees", "asift").mkString(", ")}],
+             [${getCurve("trees", "sid").mkString(", ")}],
              [${getCurve("trees", "nccLogPolar").mkString(", ")}]],
         'jpeg':
             [[${getCurve("jpeg", "lucid").mkString(", ")}],
              [${getCurve("jpeg", "brisk").mkString(", ")}],
              [${getCurve("jpeg", "sift").mkString(", ")}],
              [${getCurve("jpeg", "asift").mkString(", ")}],
+             [${getCurve("jpeg", "sid").mkString(", ")}],
              [${getCurve("jpeg", "nccLogPolar").mkString(", ")}]],
         'boat':
             [[${getCurve("boat", "lucid").mkString(", ")}],
              [${getCurve("boat", "brisk").mkString(", ")}],
              [${getCurve("boat", "sift").mkString(", ")}],
              [${getCurve("boat", "asift").mkString(", ")}],
+             [${getCurve("boat", "sid").mkString(", ")}],
              [${getCurve("boat", "nccLogPolar").mkString(", ")}]],
         'bark':
             [[${getCurve("bark", "lucid").mkString(", ")}],
              [${getCurve("bark", "brisk").mkString(", ")}],
              [${getCurve("bark", "sift").mkString(", ")}],
              [${getCurve("bark", "asift").mkString(", ")}],
+             [${getCurve("bark", "sid").mkString(", ")}],
              [${getCurve("bark", "nccLogPolar").mkString(", ")}]],
         'bikes':
             [[${getCurve("bikes", "lucid").mkString(", ")}],
              [${getCurve("bikes", "brisk").mkString(", ")}],
              [${getCurve("bikes", "sift").mkString(", ")}],
              [${getCurve("bikes", "asift").mkString(", ")}],
+             [${getCurve("bikes", "sid").mkString(", ")}],
              [${getCurve("bikes", "nccLogPolar").mkString(", ")}]],
         'light':
             [[${getCurve("light", "lucid").mkString(", ")}],
              [${getCurve("light", "brisk").mkString(", ")}],
              [${getCurve("light", "sift").mkString(", ")}],
              [${getCurve("light", "asift").mkString(", ")}],
+             [${getCurve("light", "sid").mkString(", ")}],
              [${getCurve("light", "nccLogPolar").mkString(", ")}]],
         'wall':
             [[${getCurve("wall", "lucid").mkString(", ")}],
              [${getCurve("wall", "brisk").mkString(", ")}],
              [${getCurve("wall", "sift").mkString(", ")}],
              [${getCurve("wall", "asift").mkString(", ")}],
+             [${getCurve("wall", "sid").mkString(", ")}],
              [${getCurve("wall", "nccLogPolar").mkString(", ")}]]}
     return data
 
@@ -410,7 +430,13 @@ spoke_labels = data.pop('column names')
 fig = plt.figure(figsize=(18, 9))
 #fig.subplots_adjust(wspace=0.25, hspace=0.20, top=0.85, bottom=0.05)
 
-colors = ['m', 'c', 'r', 'b', 'g']
+colors = [
+  '${MTCUtil.methodToColor("LUCID")}', 
+  '${MTCUtil.methodToColor("BRISK")}', 
+  '${MTCUtil.methodToColor("SIFT")}', 
+  '${MTCUtil.methodToColor("ASIFT")}',
+  '${MTCUtil.methodToColor("SID")}',
+  '${MTCUtil.methodToColor("NCCLP")}']
 # Plot the four cases from the example data on separate axes
 for n, title in enumerate(data.keys()):
     ax = fig.add_subplot(2, 4, n+1, projection='radar')
@@ -425,7 +451,7 @@ for n, title in enumerate(data.keys()):
 
     # add legend relative to top-left plot
 plt.subplot(2, 4, 8)
-labels = ('LUCID', 'BRISK', 'SIFT', 'ASIFT', 'NLPOLAR')
+labels = ('LUCID', 'BRISK', 'SIFT', 'ASIFT', 'SID', 'NCCLP')
 legend = plt.legend(labels, loc=(-.22, 1 - .95), labelspacing=0.1)
 plt.setp(legend.get_texts(), fontsize='small')
 
@@ -433,7 +459,7 @@ plt.setp(legend.get_texts(), fontsize='small')
 #                ha='center', color='black', weight='bold', size='large')
 
 tight_layout()    
-savefig("/tmp/OxfordRadar.pdf", bbox_inches='tight')
+savefig("/u/echristiansen/Dropbox/transfer/OxfordRadar.pdf", bbox_inches='tight')
   
 savefig("${plotFile}", bbox_inches='tight')
 """

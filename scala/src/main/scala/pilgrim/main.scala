@@ -106,6 +106,16 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
     required = false,
     default = Some(false))
 
+  val similarityMTCTable = opt[Boolean](
+    descr = "Whether to create a table of recognition rate for several Similarity-MTC methods.",
+    required = false,
+    default = Some(false))
+
+  val offsetHomography = opt[Boolean](
+    descr = "Tests for estimating homographies from two regions.",
+    required = false,
+    default = Some(false))
+
   val writeImages = opt[Boolean](
     descr = "If true, will generate summary images.",
     required = false,
@@ -153,21 +163,21 @@ object Main {
     } else None
 
     if (args.sparkContextFile.isDefined) {
-      trait MyTrait {
-        def bar: String
-      }
-
-      implicit class IntToMyTrait(self: Int) extends MyTrait {
-        override def bar = s"int_${self}"
-      }
-
-      implicit val int: Int = 5
-
-      def foo(x: Int)(implicit int: Int) = x + int
-
-      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
-
-      println("\n\n" + results.collect.toList + "\n\n")
+//      trait MyTrait {
+//        def bar: String
+//      }
+//
+//      implicit class IntToMyTrait(self: Int) extends MyTrait {
+//        override def bar = s"int_${self}"
+//      }
+//
+//      implicit val int: Int = 5
+//
+//      def foo(x: Int)(implicit int: Int) = x + int
+//
+//      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
+//
+//      println("\n\n" + results.collect.toList + "\n\n")
     }
 
     for (file <- args.tableConfigFiles()) {
@@ -249,10 +259,17 @@ object Main {
     if (args.brownTable()) {
       BrownTable.run
     }
-    
+
     if (args.rotationAndScalePlot()) {
-      sparkContext foreach (_.stop)
-      RotationAndScalePlot.run
+      RotationAndScalePlot.run(sparkContext.get)
+    }
+
+    if (args.similarityMTCTable()) {
+      SimilarityMTCTable.run(sparkContext.get)
+    }
+    
+    if (args.offsetHomography()) {
+      OffsetHomography.run(sparkContext.get)
     }
 
     sparkContext foreach (_.stop)

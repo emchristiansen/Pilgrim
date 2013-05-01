@@ -71,6 +71,39 @@ object PrecisionRecall {
       imports: Imports) = {
     loadOpenCV
 
+    val lucidExperiment = (imageClass: String, otherImage: Int) => {
+      val detector = BoundedPairDetector(
+        BoundedDetector(OpenCVDetector.FAST, 5000),
+        100)
+      //      val patchExtractor = PatchExtractor(
+      //        false,
+      //        false,
+      //        24,
+      //        5,
+      //        "Gray")
+      //
+      //      patchExtractor: Extractor[IndexedSeq[Int]]
+      //      //      patchExtractor.toJson
+      //
+      //      val extractor = NormalizedExtractor(
+      //        patchExtractor,
+      //        PatchNormalizer.Rank)
+      //
+      //      extractor: Extractor[SortDescriptor]
+      //      //      extractor.toJson
+
+      val extractor = LUCIDExtractor(
+        false,
+        false,
+        24,
+        5,
+        "Gray")
+
+      val matcher = VectorMatcher.L1
+      //      matcher: Matcher[SortDescriptor]
+      WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
+    }
+
     val briskExperiment = (imageClass: String, otherImage: Int) => {
       val detector = BoundedPairDetector(
         BoundedDetector(OpenCVDetector.BRISK, 5000),
@@ -112,6 +145,15 @@ object PrecisionRecall {
       WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
     }
 
+    val sidExperiment = (imageClass: String, otherImage: Int) => {
+      val detector = BoundedPairDetector(
+        BoundedDetector(OpenCVDetector.SIFT, 5000),
+        100)
+      val extractor = SIDExtractor
+      val matcher = VectorMatcher.L2
+      WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
+    }
+
     implicit val typeNameTODO_pilgrim_oxford_0 =
       StaticTypeName.typeNameFromConcreteInstance(siftExperiment("", 0))
     implicit val typeNameTODO_pilgrim_oxford_0_0 =
@@ -120,6 +162,10 @@ object PrecisionRecall {
       StaticTypeName.typeNameFromConcreteInstance(briskExperiment("", 0))
     implicit val typeNameTODO_pilgrim_oxford_3 =
       StaticTypeName.typeNameFromConcreteInstance(nccLogPolarExperiment("", 0))
+    implicit val typeNameTODO_pilgrim_oxford_4 =
+      StaticTypeName.typeNameFromConcreteInstance(sidExperiment("", 0))
+    implicit val typeNameTODO_pilgrim_oxford_5 =
+      StaticTypeName.typeNameFromConcreteInstance(lucidExperiment("", 0))
 
     def experimentToSource[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeName, R <% RuntimeConfig => ExperimentSummary](
       experiment: E)(implicit runtimeConfig: RuntimeConfig): ScalaSource[Seq[(Double, Double)]] = {
@@ -159,7 +205,9 @@ object PrecisionRecall {
         (experimentToSource(briskExperiment(imageClass, otherImage)), imageClass, otherImage, "brisk"),
         (experimentToSource(siftExperiment(imageClass, otherImage)), imageClass, otherImage, "sift"),
         (experimentToSource(asiftExperiment(imageClass, otherImage)), imageClass, otherImage, "asift"),
-        (experimentToSource(nccLogPolarExperiment(imageClass, otherImage)), imageClass, otherImage, "nccLogPolar"))
+        (experimentToSource(nccLogPolarExperiment(imageClass, otherImage)), imageClass, otherImage, "nccLogPolar"),
+        (experimentToSource(lucidExperiment(imageClass, otherImage)), imageClass, otherImage, "lucid"),
+        (experimentToSource(sidExperiment(imageClass, otherImage)), imageClass, otherImage, "sid"))
     }
 
     val sourcesFlat = sources.transpose.flatten
@@ -179,9 +227,9 @@ object PrecisionRecall {
     def getPlots(
       imageClass: String,
       method: String,
-      color: String,
       label: String): String = {
       val curves = getCurves(imageClass, method)
+      val color = MTCUtil.methodToColor(label)
 
       def getPlot(curve: Seq[(Double, Double)], doLabel: Boolean): String = {
         val (xs, ys) = curve.unzip
@@ -209,10 +257,12 @@ ax.plot(
       printRecall: Boolean,
       printPrecision: Boolean): String = {
       s"""
-${getPlots(imageClass, "brisk", "c", "BRISK")}      
-${getPlots(imageClass, "sift", "r", "SIFT")}
-${getPlots(imageClass, "asift", "b", "ASIFT")}
-${getPlots(imageClass, "nccLogPolar", "g", "NLPOLAR")}
+${getPlots(imageClass, "lucid", "LUCID")}        
+${getPlots(imageClass, "brisk", "BRISK")}      
+${getPlots(imageClass, "sift", "SIFT")}
+${getPlots(imageClass, "asift", "ASIFT")}
+${getPlots(imageClass, "sid", "SID")}
+${getPlots(imageClass, "nccLogPolar", "NCCLP")}
           
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
@@ -229,33 +279,33 @@ ax.grid(True)
 
     val plot = new SPyPlot {
       override def source = s"""     
-fig = figure(figsize=(10, 10))
+fig = figure(figsize=(18, 9))
         
 ########################      
      
-ax = fig.add_subplot(4,2,1)      
+ax = fig.add_subplot(2,4,1)      
 ${plotSeveral("bikes", false, true)}
 ax.legend(loc='lower left')
       
-ax = fig.add_subplot(4,2,2)      
+ax = fig.add_subplot(2,4,2)      
 ${plotSeveral("graffiti", false, false)}
 
-ax = fig.add_subplot(4,2,3)      
-${plotSeveral("jpeg", false, true)}
+ax = fig.add_subplot(2,4,3)      
+${plotSeveral("jpeg", false, false)}
 
-ax = fig.add_subplot(4,2,4)      
+ax = fig.add_subplot(2,4,4)      
 ${plotSeveral("wall", false, false)}
 
-ax = fig.add_subplot(4,2,5)      
-${plotSeveral("light", false, true)}
+ax = fig.add_subplot(2,4,5)      
+${plotSeveral("light", true, true)}
 
-ax = fig.add_subplot(4,2,6)      
-${plotSeveral("boat", false, false)}
+ax = fig.add_subplot(2,4,6)      
+${plotSeveral("boat", true, false)}
 
-ax = fig.add_subplot(4,2,7)      
-${plotSeveral("bark", true, true)}
+ax = fig.add_subplot(2,4,7)      
+${plotSeveral("bark", true, false)}
 
-ax = fig.add_subplot(4,2,8)      
+ax = fig.add_subplot(2,4,8)      
 ${plotSeveral("trees", true, false)}
 
 tight_layout()   
@@ -265,6 +315,33 @@ savefig("${plotFile}", bbox_inches='tight')
 """
     } toImage
 
-    ImageIO.write(plot, "png", Util.summaryDirectory + "parameterSweep.png")
+//    ImageIO.write(plot, "png", Util.summaryDirectory + "parameterSweep.png")
   }
 }
+
+/*
+ax = fig.add_subplot(2,4,1)      
+${plotSeveral("bikes", false, true)}
+ax.legend(loc='lower left')
+      
+ax = fig.add_subplot(2,4,2)      
+${plotSeveral("graffiti", false, false)}
+
+ax = fig.add_subplot(2,4,3)      
+${plotSeveral("jpeg", false, false)}
+
+ax = fig.add_subplot(2,4,4)      
+${plotSeveral("wall", false, false)}
+
+ax = fig.add_subplot(2,4,5)      
+${plotSeveral("light", true, true)}
+
+ax = fig.add_subplot(2,4,6)      
+${plotSeveral("boat", true, false)}
+
+ax = fig.add_subplot(2,4,7)      
+${plotSeveral("bark", true, false)}
+
+ax = fig.add_subplot(2,4,8)      
+${plotSeveral("trees", true, false)}
+*/
