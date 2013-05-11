@@ -92,6 +92,17 @@ object SimilarityMTCTable {
     //      numScales = 8,
     //      numAngles = 16)      
 
+    val siftExperiment = (imageClass: String, otherImage: Int) => {
+      val detector = BoundedPairDetector(
+        BoundedDetector(OpenCVDetector.SIFT, 5000),
+        100)
+      val extractor = OpenCVExtractor.SIFT
+
+      val matcher = VectorMatcher.L2
+
+      WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
+    }
+
     val siftSExperiment = (imageClass: String, otherImage: Int) => {
       val detector = BoundedPairDetector(
         BoundedDetector(OpenCVDetector.SIFT, 5000),
@@ -114,7 +125,7 @@ object SimilarityMTCTable {
         LUCIDExtractor(
           false,
           false,
-          8,
+          24,
           3,
           "Gray"),
         logPolarGrid)
@@ -133,7 +144,7 @@ object SimilarityMTCTable {
       val extractor = LUCIDExtractor(
         false,
         false,
-        8,
+        24,
         3,
         "Gray")
 
@@ -150,6 +161,8 @@ object SimilarityMTCTable {
       StaticTypeName.typeNameFromConcreteInstance(lucidSExperiment("", 0))
     implicit val typeNameTODO_pilgrim_sim_3 =
       StaticTypeName.typeNameFromConcreteInstance(lucidExperiment("", 0))
+    implicit val typeNameTODO_pilgrim_sim_4 =
+      StaticTypeName.typeNameFromConcreteInstance(siftExperiment("", 0))
 
     def experimentToSource[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat: TypeName, R <% RuntimeConfig => ExperimentSummary](
       experiment: E)(implicit runtimeConfig: RuntimeConfig): ScalaSource[Double] = {
@@ -181,14 +194,19 @@ object SimilarityMTCTable {
       otherImage <- otherImages
     ) yield {
       Seq(
-        (experimentToSource(nccLogPolarExperiment(imageClass, otherImage)),
+        //        (experimentToSource(nccLogPolarExperiment(imageClass, otherImage)),
+        //          imageClass,
+        //          otherImage,
+        //          "nccLogPolar"),
+        (experimentToSource(siftExperiment(imageClass, otherImage)),
           imageClass,
           otherImage,
-          "nccLogPolar"),
-//        (experimentToSource(siftSExperiment(imageClass, otherImage)),
-//          imageClass,
-//          otherImage,
-//          "siftS"),
+          "sift"),
+
+        (experimentToSource(siftSExperiment(imageClass, otherImage)),
+          imageClass,
+          otherImage,
+          "siftS"),
         (experimentToSource(lucidSExperiment(imageClass, otherImage)),
           imageClass,
           otherImage,
@@ -213,13 +231,13 @@ object SimilarityMTCTable {
       asserty(hits.size == 5)
       hits.sortBy(_._3).map(_._1)
     }
-    
+
     val methods = Seq(
-      "nccLogPolar",
-//      "siftS",
+      "lucid",
       "lucidS",
-      "lucid")
-    
+      "sift",
+      "siftS")
+
     for (method <- methods; imageClass <- imageClasses) {
       println(s"$method, $imageClass")
       println(getCurve(imageClass, method))

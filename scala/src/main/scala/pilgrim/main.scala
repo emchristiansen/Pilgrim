@@ -163,21 +163,21 @@ object Main {
     } else None
 
     if (args.sparkContextFile.isDefined) {
-//      trait MyTrait {
-//        def bar: String
-//      }
-//
-//      implicit class IntToMyTrait(self: Int) extends MyTrait {
-//        override def bar = s"int_${self}"
-//      }
-//
-//      implicit val int: Int = 5
-//
-//      def foo(x: Int)(implicit int: Int) = x + int
-//
-//      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
-//
-//      println("\n\n" + results.collect.toList + "\n\n")
+      trait MyTrait {
+        def bar: String
+      }
+
+      implicit class IntToMyTrait(self: Int) extends MyTrait {
+        override def bar = s"int_${self}"
+      }
+
+      implicit val int: Int = 5
+
+      def foo(x: Int)(implicit int: Int) = x + int
+
+      val results = sparkContext.get.parallelize(1 to 10).map(x => foo(x).bar)
+
+      println("\n\n" + results.collect.toList + "\n\n")
     }
 
     for (file <- args.tableConfigFiles()) {

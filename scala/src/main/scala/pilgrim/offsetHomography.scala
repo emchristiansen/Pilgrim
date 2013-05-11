@@ -79,7 +79,7 @@ object OffsetHomography {
       homography: Homography): Double = {
       val threshold = 2
 
-      val misses = correspondences map {
+      val hits = correspondences map {
         case (left, right) =>
           val attempt = Try {
             val estimate = homography.transformXYOnly(left)
@@ -87,38 +87,37 @@ object OffsetHomography {
             val xError = (estimate.pt.x - right.pt.x).abs
             val yError = (estimate.pt.y - right.pt.y).abs
 
-            if (Seq(xError, yError).max > threshold) 1
-            else 0
+            if (Seq(xError, yError).max > threshold) 0
+            else 1
           }
 
           attempt.getOrElse(0)
       }
 
-      misses.sum.toDouble / misses.size
+      hits.sum.toDouble / hits.size
     }
 
     val numKeyPointsToDrop = 0
-    val numKeyPointsToKeep = 10
+    val numKeyPointsToKeep = 500
     val detector = BoundedPairDetector(
       BoundedDetector(OpenCVDetector.SIFT, 20000),
       numKeyPointsToDrop + numKeyPointsToKeep)
     val minRadius = 4
     val maxRadius = 32
-    val numScales = 8
-    val numAngles = 16
+    val numScales = 32
+    val numAngles = 32
     val extractor = new contrib.NCCLogPolarExtractor(
       minRadius,
       maxRadius,
       numScales,
       numAngles,
       1.2)
-    val scaleSearchRadius = 4
+    val scaleSearchRadius = numScales / 2
     val matcher = new contrib.NCCLogPolarMatcher(scaleSearchRadius)
     val numIters = 100
 
     def twoPointHomography(
-      correspondences: Seq[((KeyPoint, contrib.NCCBlock), (KeyPoint, contrib.NCCBlock))],
-      trash: Homography): Homography = {
+      correspondences: Seq[((KeyPoint, contrib.NCCBlock), (KeyPoint, contrib.NCCBlock))]): Homography = {
       asserty(correspondences.size == 2)
 
       val ((leftKeyPointA, leftDescriptorA), (rightKeyPointA, rightDescriptorA)) = correspondences(0)
@@ -209,12 +208,10 @@ object OffsetHomography {
       //      groundTruth
     }
 
-    val offsetExperiment = (imageClass: String, otherImage: Int) => {
-      val experiment = WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
+    val offsetExperiment = (leftImage: BufferedImage, rightImage: BufferedImage) => {
+      //      val experiment = WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
 
-      val groundTruth = experiment.groundTruth
-      val leftImage = experiment.leftImage
-      val rightImage = experiment.rightImage
+      //      val groundTruth = experiment.groundTruth
 
       def keyPointsAndDescriptors(image: BufferedImage) = {
         val keyPoints = detector.detect(image).drop(numKeyPointsToDrop)
@@ -266,8 +263,7 @@ object OffsetHomography {
 
         val homography2: Homography =
           twoPointHomography(
-            regionCorrespondences.take(2) map wipeCorrespondencePair,
-            groundTruth)
+            regionCorrespondences.take(2) map wipeCorrespondencePair)
         val goodness2 = homographyGoodnessOfFit(keyPointCorrespondences, homography2)
         //        println(homography4)
         //        println(goodness2)
@@ -277,11 +273,17 @@ object OffsetHomography {
         (goodness4, goodness2)
       }
 
-      //      println(scores)
-      //      println(s"4-point: ${MathUtil.mean(scores.map(_._1))}")
-      //      println(s"2-region: ${MathUtil.mean(scores.map(_._2))}")
+      val (scores4, scores2) = (scores.map(_._1), scores.map(_._2))
 
-      (MathUtil.mean(scores.map(_._1)), MathUtil.mean(scores.map(_._2)))
+      def isInlierSet(score: Double): Int =
+        if (score > 0.8) 1 else 0
+
+      val hits4 = scores4 map isInlierSet
+      val hits2 = scores2 map isInlierSet
+
+//      (MathUtil.mean(hits4), MathUtil.mean(hits2))
+      (MathUtil.mean(scores4), MathUtil.mean(scores2))
+      //      (MathUtil.mean(scores.map(_._1)), MathUtil.mean(scores.map(_._2)))
     }
 
     val imageClasses = Seq(
@@ -295,13 +297,42 @@ object OffsetHomography {
       "wall")
 
     for (imageClass <- imageClasses) {
-      val goodnessPairs = 2 to 6 map { otherImage =>
-        offsetExperiment(imageClass, otherImage)
+      val scorePairs = 2 to 6 map { otherImage =>
+        val root = runtimeConfig.dataRoot + "oxfordImages" + imageClass + "images"
+        val leftImage = ImageIO.read(root + "img1.bmp")
+        asserty(leftImage.getWidth > 0)
+        val rightImage = ImageIO.read(root + s"img$otherImage.bmp")
+        asserty(rightImage.getWidth > 0)
+        offsetExperiment(leftImage, rightImage)
       }
 
-      println(s"$imageClass")
-      println(s"4-point: ${goodnessPairs.map(_._1)}")
-      println(s"2-point: ${goodnessPairs.map(_._2)}")
+      val (scores4, scores2) = scorePairs unzip
+
+      println(imageClass)
+      println(s"4-point: $scores4")
+      println(s"2-point: $scores2")
     }
+
+    //    val leftImageIndex = 4
+    //    val goodnessPairs = 0 to 9 map { rightImageIndex =>
+    //      val houseRoot = runtimeConfig.dataRoot + "oxfordModelHouse"
+    //      val leftImage = ImageIO.read(houseRoot + s"house.00$leftImageIndex.png")
+    //      val rightImage = ImageIO.read(houseRoot + s"house.00$rightImageIndex.png")
+    //
+    //      offsetExperiment(leftImage, rightImage)
+    //    }
+    //
+    //    println(s"$leftImageIndex")
+    //    println(s"4-point: ${goodnessPairs.map(_._1)}")
+    //    println(s"2-point: ${goodnessPairs.map(_._2)}")
+
+    //    val timesSquareRoot = runtimeConfig.dataRoot + "timesSquare"
+    //    val timesSquare0 = ImageIO.read(timesSquareRoot + "TimesSquare0_gray.png")
+    //    val timesSquare1 = ImageIO.read(timesSquareRoot + "TimesSquare1_gray.png")
+    //    println(timesSquare0.getWidth)
+    //    println(timesSquare0.getHeight)
+    //    println(timesSquare1.getWidth)
+    //    println(timesSquare1.getHeight)
+    //    println(offsetExperiment(timesSquare0, timesSquare1))
   }
 }

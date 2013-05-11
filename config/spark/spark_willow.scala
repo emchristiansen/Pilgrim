@@ -8,6 +8,7 @@ val environment = Map(
 //  "SPARK_WORKER_MEMORY" -> "48g",
 //  "SPARK_CLASSPATH" -> "")
 //  "SPARK_WORKER_CORES" -> "8",
+  "SPARK_LOCAL_IP" -> "10.0.3.31",
   "SPARK_CLASSPATH" -> System.getProperty("java.class.path"))
 
 new SparkContext(

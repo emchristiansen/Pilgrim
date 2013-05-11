@@ -94,8 +94,8 @@ object RotationAndScalePlot {
       val detector = BoundedPairDetector(
         BoundedDetector(OpenCVDetector.SIFT, 5000),
         numKeyPoints)
-      val numScales = 8
-      val numAngles = 16
+      val numScales = 16
+      val numAngles = 32
       val extractor = new contrib.NCCLogPolarExtractor(
         1,
         32,
@@ -178,11 +178,11 @@ object RotationAndScalePlot {
     }
 
     val siftSExperimentScale = (imageClass: String, scaleFactor: Double, angle: Double) => {
-//      val scaleWidth = 3.0
+      //      val scaleWidth = 3.0
       val logPolarGridScale = LogPolarGrid(
         minRadius = 0.5,
-        maxRadius = 4.0,
-        numScales = 16,
+        maxRadius = 2.0,
+        numScales = 32,
         numAngles = 2)
 
       val detector = BoundedPairDetector(
@@ -231,7 +231,7 @@ object RotationAndScalePlot {
     }
 
     val lucidSExperimentScale = (imageClass: String, scaleFactor: Double, angle: Double) => {
-//      val scaleWidth = 2.51
+      //      val scaleWidth = 2.51
       val logPolarGridScale = LogPolarGrid(
         minRadius = 0.5,
         maxRadius = 2.0,
@@ -338,18 +338,19 @@ object RotationAndScalePlot {
       //      "graffiti",
       //      "trees",
       //      "jpeg",
-      //      "boat", 
-      //      "bark",
+            "boat",
+            "bark"
       //      "bikes",
       //            "light",
-      "wall")
+//      "wall"
+        )
 
     //    val imageClasses = Seq(
     //      "boat")
 
     //        val scales = 0.4 to 3.0 by 0.1
     // Another Scala bug workaround
-    val scales = (0.2 to 3.4 by 0.2).toList.toIndexedSeq
+    val scales = (0.3 to 3.0 by 0.2).toList.toIndexedSeq
     val scaleSearch = scales map { scale => (scale, 0.0) }
     val angles = (0.0 to 2 * math.Pi by (2.001 * math.Pi / 16)).toList.toIndexedSeq
     val angleSearch = angles map { angle => (1.0, angle) }
@@ -359,30 +360,31 @@ object RotationAndScalePlot {
       (scaleFactor, angle) <- scaleSearch ++ angleSearch
     ) yield {
       Seq(
-        //        (experimentToSource(briskExperiment(imageClass, scaleFactor, angle)),
-        //          imageClass,
-        //          scaleFactor,
-        //          angle,
-        //          "BRISK"),
-        //        (experimentToSource(siftExperiment(imageClass, scaleFactor, angle)),
-        //          imageClass,
-        //          scaleFactor,
-        //          angle,
-        //          "SIFT"),
-        //        (experimentToSource(nccLogPolarExperiment(imageClass, scaleFactor, angle)),
-        //          imageClass, scaleFactor, angle, "NCCLP"),
-                (experimentToSource(lucidSExperimentScale(imageClass, scaleFactor, angle)),
-                  imageClass, scaleFactor, angle, "LUCID-S-Scale"))
-        //        (experimentToSource(lucidSExperimentRotation(imageClass, scaleFactor, angle)),
-        //          imageClass, scaleFactor, angle, "LUCID-S-Rotation"),
+        (experimentToSource(briskExperiment(imageClass, scaleFactor, angle)),
+          imageClass,
+          scaleFactor,
+          angle,
+          "BRISK"),
+        (experimentToSource(siftExperiment(imageClass, scaleFactor, angle)),
+          imageClass,
+          scaleFactor,
+          angle,
+          "SIFT"),
+        (experimentToSource(nccLogPolarExperiment(imageClass, scaleFactor, angle)),
+          imageClass, scaleFactor, angle, "NCCLP"),
+        (experimentToSource(lucidSExperimentScale(imageClass, scaleFactor, angle)),
+          imageClass, scaleFactor, angle, "LUCID-S-Scale"),
+        (experimentToSource(lucidSExperimentRotation(imageClass, scaleFactor, angle)),
+          imageClass, scaleFactor, angle, "LUCID-S-Rotation"),
 //        (experimentToSource(siftSExperimentScale(imageClass, scaleFactor, angle)),
-//          imageClass, scaleFactor, angle, "SIFT-S-Scale"))
-//              (experimentToSource(siftSExperimentRotation(imageClass, scaleFactor, angle)),
-//                imageClass, scaleFactor, angle, "SIFT-S-Rotation"))
-      //        (experimentToSource(lucidExperiment(imageClass, scaleFactor, angle)),
-      //          imageClass, scaleFactor, angle, "LUCID"),
-      //        (experimentToSource(sidExperiment(imageClass, scaleFactor, angle)),
-      //          imageClass, scaleFactor, angle, "SID"))
+//          imageClass, scaleFactor, angle, "SIFT-S-Scale"),
+//        (experimentToSource(siftSExperimentRotation(imageClass, scaleFactor, angle)),
+//          imageClass, scaleFactor, angle, "SIFT-S-Rotation"),
+        (experimentToSource(lucidExperiment(imageClass, scaleFactor, angle)),
+          imageClass, scaleFactor, angle, "LUCID"),
+        (experimentToSource(sidExperiment(imageClass, scaleFactor, angle)),
+          imageClass, scaleFactor, angle, "SID")
+          )
     }
 
     val sourcesFlat = sources.transpose.flatten
@@ -514,37 +516,35 @@ ax.plot(
     //      """
     //    }    
 
+        def scalePlots = s"""
+    ${getPlot("LUCID", true)}
+    ${getPlot("BRISK", true)}
+    ${getPlot("SIFT", true)}
+    ${getPlot("SID", true)}
+    ${getPlot("LUCID-S", true)}
+    ${getPlot("NCCLP", true)}
+    """
+    
+        def rotationPlots = s"""
+    ${getPlot("LUCID", false)}
+    ${getPlot("BRISK", false)}
+    ${getPlot("SIFT", false)}
+    ${getPlot("SID", false)}
+    ${getPlot("LUCID-S", false)}
+    ${getPlot("NCCLP", false)}
+    """      
+
 //    def scalePlots = s"""
-//${getPlot("LUCID", true)}
-//${getPlot("BRISK", true)}
-//${getPlot("SIFT", true)}
-//${getPlot("SID", true)}
-//${getPlot("LUCID-S", true)}
-//${getPlot("SIFT-S", true)}
-//${getPlot("NCCLP", true)}
+//${getPlot("LUCID-S", true)}    
 //"""
 //
 //    def rotationPlots = s"""
-//${getPlot("LUCID", false)}
-//${getPlot("BRISK", false)}
-//${getPlot("SIFT", false)}
-//${getPlot("SID", false)}
-//${getPlot("LUCID-S", false)}
-//${getPlot("SIFT-S", false)}
-//${getPlot("NCCLP", false)}
-//"""      
-    
-    def scalePlots = s"""
-${getPlot("LUCID-S", true)}    
-"""
+//
+//"""
 
-    def rotationPlots = s"""
-
-"""       
-      
     val plot = new SPyPlot {
       override def source = s"""     
-fig = figure(figsize=(16, 8))
+fig = figure(figsize=(16, 4))
         
 ########################      
      
