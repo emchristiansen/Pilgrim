@@ -18,7 +18,7 @@ object PilgrimBuild extends Build {
     )
   )
 
-  val scalaVersionName = "2.10.1"
+  val scalaVersionName = "2.10.2"
 
   def sparkDependency = Seq(libraryDependencies += "org.spark-project" %% "spark-core" % "0.7.0-SNAPSHOT")
 

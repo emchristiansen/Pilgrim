@@ -1,0 +1,13 @@
+*~
+*#*
+.classpath
+.project
+.settings/
+matlab/data/
+scala/.classpath
+scala/.project
+scala/.settings/
+scala/project/project/
+scala/project/target/
+scala/target/
+summary/
