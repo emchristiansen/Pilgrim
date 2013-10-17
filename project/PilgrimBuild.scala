@@ -25,7 +25,13 @@ object PilgrimBuild extends Build {
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
+      "org.xerial" % "sqlite-jdbc" % "3.7.2",
+      "org.jumpmind.symmetric.jdbc" % "mariadb-java-client" % "1.1.1",
+//      "mysql" % "mysql-connector-java" % "5.1.6",
+      "com.typesafe.slick" %% "slick" % "1.0.1",
       "st.sparse" %% "sundry" % "0.1-SNAPSHOT",
+      "st.sparse" %% "billy" % "0.1-SNAPSHOT",
+      "org.apache.spark" %% "spark-core" % "0.9.0-incubating-sparsest-SNAPSHOT",
       "org.rogach" %% "scallop" % "0.9.4"))
 
   def updateOnDependencyChange = Seq(
@@ -54,7 +60,7 @@ object PilgrimBuild extends Build {
       scalaSettings ++
       updateOnDependencyChange ++
       com.typesafe.sbt.SbtNativePackager.packageArchetype.java_application
-//      SbtStartScript.startScriptForClassesSettings
+  //      SbtStartScript.startScriptForClassesSettings
 
   lazy val root = {
     val settings = libSettings ++ Seq(name := projectName, fork := true)
