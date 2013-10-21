@@ -18,6 +18,11 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
 }
 
 object Pilgrim {
+  def configureLogger() {
+    // Must be one of: "trace", "debug", "info", "warn", or "error".
+    System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
+  }
+  
   /**
    * This unfortunate bit of magic is a workaround for an
    * apparent concurrency bug in SLF4J.
@@ -30,6 +35,7 @@ object Pilgrim {
   }
 
   def main(unparsedArgs: Array[String]) {
+    configureLogger()
     initializeLogger()
     
     val args = new Conf(unparsedArgs)

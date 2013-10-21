@@ -50,29 +50,34 @@ class SimpleOxford extends Task {
         detectorString <- detectorStrings;
         extractorString <- extractorStrings;
         matcherString <- matcherStrings
-      ) yield {
-        val code = s"""        
-${cn[Oxford[_, _, _, _]]}(
+      ) yield {  
+        val code = s"""
+import scala.pickling._
+import scala.pickling.binary._
+import st.sparse.billy.experiments.wideBaseline._        
+        
+val experiment = ${cn[Oxford[_, _, _, _]]}(
   "$imageClass", 
   $otherImage, 
   $detectorString, 
   $extractorString, 
-  $matcherString): ${cn[Experiment]}    	
+  $matcherString)
+${on[Experiment]}.cached(experiment): ${on[Experiment]}
 """
         println(code)
 
         tb.eval(tb.parse(code)).asInstanceOf[Experiment]
       }
-
+    
     val experiments = evalExperiments(
       Seq("boat"),
-      2 to 6,
+      2 to 2,
       Seq(s"${cn[BoundedDetector[_]]}(${on[OpenCVDetector.FAST.type]}, 100)"),
-      Seq(on[OpenCVExtractor.SIFT.type], on[OpenCVExtractor.SURF.type]),
+//      Seq(on[OpenCVExtractor.SIFT.type], on[OpenCVExtractor.SURF.type]),
+      Seq(on[OpenCVExtractor.SIFT.type]),
       Seq(on[VectorMatcher.L1.type], on[VectorMatcher.L2.type]))
 
-    val results = experiments.par.map(_.run).toIndexedSeq
-    results foreach (println)
+    val results = experiments.map(_.run).toIndexedSeq
 
     println("In Oxford")
   }
