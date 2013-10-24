@@ -126,4 +126,34 @@ object HListUtil {
 
     abcd map Flatten4
   }
+
+  ///////////////////////////////////////////////////////////
+
+  object Flatten5 extends Poly1 {
+    implicit def default[A, B, C, D, E] = at[((((A, B), C), D), E)] {
+      case ((((a, b), c), d), e) => (a, b, c, d, e)
+    }
+  }
+
+  /**
+   * The Cartesian product of five HLists.
+   */
+  def cartesian5[A <: HList, B <: HList, C <: HList, D <: HList, E <: HList, Out1 <: HList, Out2 <: HList, Out3 <: HList, Out4 <: HList](
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E)(
+      implicit lift1: LiftA2[tuple2.type, A, B, Out1],
+      lift2: LiftA2[tuple2.type, Out1, C, Out2],
+      lift3: LiftA2[tuple2.type, Out2, D, Out3],
+      lift4: LiftA2[tuple2.type, Out3, E, Out4],
+      mapper: Mapper[Flatten5.type, Out4]) = {
+    val ab = cartesian2(a, b)
+    val abc = cartesian2(ab, c)
+    val abcd = cartesian2(abc, d)
+    val abcde = cartesian2(abcd, e)
+
+    abcde map Flatten5
+  }
 }
