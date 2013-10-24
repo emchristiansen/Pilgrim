@@ -53,56 +53,6 @@ class SimpleOxford extends Task with Logging {
     
     val experiments = tuples flatMap constructExperimentLifted
 
-//    def evalExperiments(
-//      imageClasses: Seq[String],
-//      otherImages: Seq[Int],
-//      detectorStrings: Seq[String],
-//      extractorStrings: Seq[String],
-//      matcherStrings: Seq[String]): Seq[Option[Experiment]] =
-//      for (
-//        imageClass <- imageClasses;
-//        otherImage <- otherImages;
-//        detectorString <- detectorStrings;
-//        extractorString <- extractorStrings;
-//        matcherString <- matcherStrings
-//      ) yield {
-//        val code = s"""
-//import scala.pickling._
-//import scala.pickling.binary._
-//import st.sparse.billy.experiments.wideBaseline._        
-//        
-//val experiment = ${cn[Oxford[_, _, _, _]]}(
-//  "$imageClass", 
-//  $otherImage, 
-//  $detectorString, 
-//  $extractorString, 
-//  $matcherString)
-//${on[Experiment]}.cached(experiment): ${on[Experiment]}
-//"""
-//        println(s"Compiling:\n$code")
-//
-//        val experimentOption = Try(eval[Experiment](code)).toOption
-//
-//        if (!experimentOption.isDefined) {
-//          println(s"Could not compile:\n$code")
-//        }
-//
-//        experimentOption
-//      }
-//
-//    val experiments = evalExperiments(
-//      Seq("boat", "bikes"),
-//      2 to 3,
-//      Seq(
-//        s"${cn[BoundedDetector[_]]}(${on[OpenCVDetector.FAST.type]}, 200)",
-//        s"${cn[BoundedDetector[_]]}(${on[OpenCVDetector.SIFT.type]}, 200)"),
-//      Seq(
-//        on[OpenCVExtractor.SIFT.type],
-//        on[OpenCVExtractor.BRISK.type]),
-//      Seq(
-//        on[VectorMatcher.L0.type],
-//        on[VectorMatcher.L2.type])).flatten
-
 //    val results = experiments.map(_.run).toIndexedSeq
 //
 //    val table = Table(
