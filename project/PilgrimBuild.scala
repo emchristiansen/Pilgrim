@@ -29,11 +29,12 @@ object PilgrimBuild extends Build {
       "org.jumpmind.symmetric.jdbc" % "mariadb-java-client" % "1.1.1",
       //      "mysql" % "mysql-connector-java" % "5.1.6",
       "com.typesafe.slick" %% "slick" % "1.0.1",
-      "st.sparse" %% "sundry" % "0.1.1-SNAPSHOT",
-      "st.sparse" %% "billy" % "0.1.1-SNAPSHOT",
+      "st.sparse" %% "sundry" % "0.1.2-SNAPSHOT",
+      "st.sparse" %% "billy" % "0.1.2-SNAPSHOT",
       "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
       "org.slf4j" % "slf4j-simple" % "1.7.5",
       "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1",
+      "com.typesafe.akka" %% "akka-actor" % "2.2.3",
       "org.rogach" %% "scallop" % "0.9.4"))
 
   def updateOnDependencyChange = Seq(
