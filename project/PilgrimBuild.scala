@@ -31,7 +31,7 @@ object PilgrimBuild extends Build {
       "com.typesafe.slick" %% "slick" % "1.0.1",
       "st.sparse" %% "sundry" % "0.1.2-SNAPSHOT",
       "st.sparse" %% "billy" % "0.1.2-SNAPSHOT",
-      "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
+//      "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
       "org.slf4j" % "slf4j-simple" % "1.7.5",
       "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1",
       "com.typesafe.akka" %% "akka-actor" % "2.2.3",
