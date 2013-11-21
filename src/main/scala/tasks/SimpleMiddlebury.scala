@@ -4,9 +4,9 @@ import pilgrim._
 import st.sparse.billy._
 import st.sparse.billy.experiments.RuntimeConfig
 import st.sparse.billy.experiments.wideBaseline._
-import st.sparse.billy.extractors.OpenCVExtractor
+import st.sparse.billy.extractors._
 import st.sparse.billy.detectors._
-import st.sparse.billy.matchers.VectorMatcher
+import st.sparse.billy.matchers._
 import scala.pickling._
 import scala.pickling.binary._
 import st.sparse.billy.detectors.BoundedDetector
@@ -30,6 +30,8 @@ class SimpleMiddlebury extends Task with Logging {
     implicit runtimeConfig: RuntimeConfig) {
     require(unparsedArgs.isEmpty)
 
+    implicit val matlabLibraryRoot = runtimeConfig.matlabLibraryRoot.get
+
     val exampleTime = new DateTime
     val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
     val exampleRecording = Set((exampleTime, exampleResults))
@@ -39,22 +41,44 @@ class SimpleMiddlebury extends Task with Logging {
     assert(exampleRecording == unpickled)
 
     val databaseYear = 2005
+    //    val imageClasses = Seq(
+    //      "Art",
+    //      "Books",
+    //      "Dolls",
+    //      "Laundry",
+    //      "Moebius",
+    //      "Reindeer")
     val imageClasses = Seq(
-      "Art",
-      "Books",
-      "Dolls",
-      "Laundry",
-      "Moebius",
-      "Reindeer")
+      "Moebius")
     val maxDescriptorPairs = 100
     val detectors = DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.FAST) ::
-      DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.SIFT) ::
+//      DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.SIFT) ::
       HNil
-    val extractors = OpenCVExtractor.BRIEF ::
-      OpenCVExtractor.BRISK ::
-      OpenCVExtractor.SIFT ::
-      HNil
-    val matchers = VectorMatcher.L0 :: VectorMatcher.L1 :: HNil
+
+    val pixelSExtractors =
+      AndExtractor(
+        PatchExtractor(Gray, 24, 1),
+        ForegroundMaskExtractor(24)) ::
+        HNil
+
+    val extractors = pixelSExtractors 
+//    ++
+//      (OpenCVExtractor.BRIEF ::
+//        OpenCVExtractor.BRISK ::
+//        OpenCVExtractor.SIFT ::
+//        HNil)
+
+    val pixelSMatchers =
+//      PixelSMatcher(1, 1, 1, 1) ::
+//        PixelSMatcher(1, 0, 0, 0) ::
+//        PixelSMatcher(0, 1, 0, 0) ::
+        PixelSMatcher(0, 0, 1, 0) ::
+        PixelSMatcher(0, 0, 0, 1) ::
+        HNil
+
+    val matchers = pixelSMatchers 
+//    ++
+//      (VectorMatcher.L0 :: VectorMatcher.L1 :: HNil)
 
     object constructExperiment extends Poly1 {
       implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
@@ -95,6 +119,9 @@ class SimpleMiddlebury extends Task with Logging {
       hList.toList.flatten.toIndexedSeq
     }
 
+    println("Experiments:")
+    experiments foreach println
+    
     //    val results = experiments.map { _.run }
 
     val results = experiments.par.map(_.run).toIndexedSeq
