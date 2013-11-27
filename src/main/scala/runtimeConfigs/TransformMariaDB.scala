@@ -1,12 +1,12 @@
 package runtimeConfigs
 
 import org.rogach.scallop.ScallopConf
-
 import pilgrim.RuntimeConfigWrapper
 import st.sparse.billy.experiments.RuntimeConfig
 import st.sparse.persistentmap.ConnectionHelper
 import st.sparse.sundry.ExistingDirectory
 import st.sparse.billy._
+import java.io.File
 
 class TransformMariaDB extends RuntimeConfigWrapper {
   class Conf(args: Seq[String]) extends ScallopConf(args) {
@@ -19,6 +19,9 @@ class TransformMariaDB extends RuntimeConfigWrapper {
 
   override def runtimeConfig(unparsedArgs: Seq[String]) = {
     val args = new Conf(unparsedArgs)
+
+    //    val database = ConnectionHelper.databaseSQLite(
+    //      new File("/home/eric/Downloads/Pilgrim.sqlite"))
 
     val database = ConnectionHelper.databaseMariaDB(
       "localhost",

@@ -39,97 +39,97 @@ class SimpleOxford extends Task with Logging {
     implicit runtimeConfig: RuntimeConfig) {
     require(unparsedArgs.isEmpty)
 
-    //    val actorSystem = ActorSystem.create()
-    //    println(actorSystem.toString)
-    //    //    println(actorSystem.settings)
-    //
-    //    implicit val executionContext = actorSystem.dispatchers.lookup("my-dispatcher")
-    //    println(executionContext)
-    //
-    //    //    val future = Future {
-    //    //      "Hello" + "World" + " " + ManagementFactory.getRuntimeMXBean().getName()
-    //    //    }
-    //    //
-    //    //    val futures = 20 times future
-    //    //
-    //    //    val results = futures.map(Await.result(_, 0 nanos))
-    //
-    //    //    results foreach (println)
-
-    val exampleTime = new DateTime
-    val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
-    val exampleRecording = Set((exampleTime, exampleResults))
-    val unpickled = exampleRecording.pickle.unpickle[Set[(DateTime, Results)]]
-    println(exampleRecording)
-    println(unpickled)
-    assert(exampleRecording == unpickled)
-
-    val imageClasses = Seq("bikes", "boat")
-    val otherImages = 2 to 6
-    val maxDescriptorPairs = 100
-    val detectors = DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.FAST) ::
-      DoublyBoundedPairDetector(2, 100, 500, OpenCVDetector.SIFT) ::
-      HNil
-    val extractors = OpenCVExtractor.BRISK :: OpenCVExtractor.SIFT :: HNil
-    val matchers = VectorMatcher.L0 :: VectorMatcher.L1 :: HNil
-
-    object constructExperiment extends Poly1 {
-      implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
-        implicit ftt: FastTypeTag[Oxford[D, E, M, F]],
-        sp: SPickler[Oxford[D, E, M, F]],
-        u: Unpickler[Oxford[D, E, M, F]],
-        ftt2e: FastTypeTag[FastTypeTag[Oxford[D, E, M, F]]]) =
-        at[(D, E, M)] {
-          case (detector, extractor, matcher) => {
-            for (imageClass <- imageClasses; otherImage <- otherImages) yield {
-              val oxford =
-                Oxford(
-                  imageClass,
-                  otherImage,
-                  maxDescriptorPairs,
-                  detector,
-                  extractor,
-                  matcher)
-              oxford.pickle.unpickle[Oxford[D, E, M, F]]
-                            Experiment.cached(oxford)
-//              oxford: Experiment
-            }
-          }
-        }
-    }
-
-    // This lifting, combined with flatMap, filters out types that can't be used
-    // to construct experiments.   
-    object constructExperimentLifted extends LiftU(constructExperiment)
-
-    val tuples = HListUtil.cartesian3(
-      detectors,
-      extractors,
-      matchers)
-
-    val experiments = {
-      val hList = tuples flatMap constructExperimentLifted
-      hList.toList.flatten.toIndexedSeq
-    }
-
-    val results = experiments.map { _.run }
-    
-//    val results = experiments.par.map(_.run).toIndexedSeq
-    
-    //    val resultsFutures = experiments.map { experiment =>
-    //      Future { experiment.run }
-    //    }.toIndexedSeq
-    //    val results = resultsFutures.map(Await.result(_, 1000 seconds))
-
-    val table = Table(
-      experiments zip results,
-      (e: Experiment) => e.modelParametersString,
-      (e: Experiment) => e.experimentParametersString,
-      (r: Results) => r.recognitionRate.toString)
-
-    FileUtils.writeStringToFile(
-      new File("/home/eric/Downloads/results1.csv"),
-      table.tsv)
+//    //    val actorSystem = ActorSystem.create()
+//    //    println(actorSystem.toString)
+//    //    //    println(actorSystem.settings)
+//    //
+//    //    implicit val executionContext = actorSystem.dispatchers.lookup("my-dispatcher")
+//    //    println(executionContext)
+//    //
+//    //    //    val future = Future {
+//    //    //      "Hello" + "World" + " " + ManagementFactory.getRuntimeMXBean().getName()
+//    //    //    }
+//    //    //
+//    //    //    val futures = 20 times future
+//    //    //
+//    //    //    val results = futures.map(Await.result(_, 0 nanos))
+//    //
+//    //    //    results foreach (println)
+//
+//    val exampleTime = new DateTime
+//    val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
+//    val exampleRecording = Set((exampleTime, exampleResults))
+//    val unpickled = exampleRecording.pickle.unpickle[Set[(DateTime, Results)]]
+//    println(exampleRecording)
+//    println(unpickled)
+//    assert(exampleRecording == unpickled)
+//
+//    val imageClasses = Seq("bikes", "boat")
+//    val otherImages = 2 to 6
+//    val maxDescriptorPairs = 100
+//    val detectors = DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.FAST) ::
+//      DoublyBoundedPairDetector(2, 100, 500, OpenCVDetector.SIFT) ::
+//      HNil
+//    val extractors = OpenCVExtractor.BRISK :: OpenCVExtractor.SIFT :: HNil
+//    val matchers = VectorMatcher.L0 :: VectorMatcher.L1 :: HNil
+//
+//    object constructExperiment extends Poly1 {
+//      implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
+//        implicit ftt: FastTypeTag[Oxford[D, E, M, F]],
+//        sp: SPickler[Oxford[D, E, M, F]],
+//        u: Unpickler[Oxford[D, E, M, F]],
+//        ftt2e: FastTypeTag[FastTypeTag[Oxford[D, E, M, F]]]) =
+//        at[(D, E, M)] {
+//          case (detector, extractor, matcher) => {
+//            for (imageClass <- imageClasses; otherImage <- otherImages) yield {
+//              val oxford =
+//                Oxford(
+//                  imageClass,
+//                  otherImage,
+//                  maxDescriptorPairs,
+//                  detector,
+//                  extractor,
+//                  matcher)
+//              oxford.pickle.unpickle[Oxford[D, E, M, F]]
+//                            Experiment.cached(oxford)
+////              oxford: Experiment
+//            }
+//          }
+//        }
+//    }
+//
+//    // This lifting, combined with flatMap, filters out types that can't be used
+//    // to construct experiments.   
+//    object constructExperimentLifted extends LiftU(constructExperiment)
+//
+//    val tuples = HListUtil.cartesian3(
+//      detectors,
+//      extractors,
+//      matchers)
+//
+//    val experiments = {
+//      val hList = tuples flatMap constructExperimentLifted
+//      hList.toList.flatten.toIndexedSeq
+//    }
+//
+//    val results = experiments.map { _.run }
+//    
+////    val results = experiments.par.map(_.run).toIndexedSeq
+//    
+//    //    val resultsFutures = experiments.map { experiment =>
+//    //      Future { experiment.run }
+//    //    }.toIndexedSeq
+//    //    val results = resultsFutures.map(Await.result(_, 1000 seconds))
+//
+//    val table = Table(
+//      experiments zip results,
+//      (e: Experiment) => e.modelParametersString,
+//      (e: Experiment) => e.experimentParametersString,
+//      (r: Results) => r.recognitionRate.toString)
+//
+//    FileUtils.writeStringToFile(
+//      new File("/home/eric/Downloads/results1.csv"),
+//      table.tsv)
 
     println("In Oxford")
 
