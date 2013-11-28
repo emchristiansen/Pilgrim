@@ -1,29 +1,29 @@
 package tasks
 
 import pilgrim._
+
 import st.sparse.billy._
-import st.sparse.billy.experiments.RuntimeConfig
+import st.sparse.billy.experiments._
 import st.sparse.billy.experiments.wideBaseline._
-import st.sparse.billy.extractors._
 import st.sparse.billy.detectors._
+import st.sparse.billy.extractors._
 import st.sparse.billy.matchers._
+import org.scalatest.fixture
+import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalacheck.Gen
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import scala.pickling._
 import scala.pickling.binary._
-import st.sparse.billy.detectors.BoundedDetector
-import shapeless._
-import shapeless.ops.hlist._
-import shapeless.poly._
-import scala.reflect.runtime._
 import st.sparse.sundry._
-import org.apache.commons.io.FileUtils
-import st.sparse.billy.experiments.wideBaseline.Table
-import st.sparse.billy.experiments.wideBaseline.Results
+import breeze.linalg.DenseMatrix
+import scala.reflect.ClassTag
+import com.sksamuel.scrimage._
+import org.opencv.core.KeyPoint
 import java.io.File
 import scala.util.Try
-import com.typesafe.scalalogging.slf4j.Logging
-import breeze.linalg._
-import org.joda.time._
-import st.sparse.persistentmap.CustomPicklers._
+import org.apache.commons.io.FileUtils
 
 class SimpleMiddlebury extends Task with Logging {
   override def run(unparsedArgs: Seq[String])(
@@ -37,26 +37,40 @@ class SimpleMiddlebury extends Task with Logging {
       LogRoot(ExistingDirectory(file))
     }
 
-    val exampleTime = new DateTime
-    val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
-    val exampleRecording = Set((exampleTime, exampleResults))
-    val unpickled = exampleRecording.pickle.unpickle[Set[(DateTime, Results)]]
-    println(exampleRecording)
-    println(unpickled)
-    assert(exampleRecording == unpickled)
+//    val image = Image(new File("/home/eric/Dropbox/goldfish_girl.png"))
+//    println(image.width)
+//    val pickled = image.toPOD.pickle
+//    val image2 = RichImage.fromPOD(pickled.unpickle[ImagePOD])
+//    assert(image == image2)
+//    println("here")
+    
+//    val image = Image(new File("/home/eric/Dropbox/goldfish_girl.png"))
+//    println(image.width)
+//    val pickled = image.pickle
+//    val image2 = pickled.unpickle[Image]
+//    assert(image == image2)
+//    println("here")    
+    
+//    val exampleTime = new DateTime
+//    val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
+//    val exampleRecording = Set((exampleTime, exampleResults))
+//    val unpickled = exampleRecording.pickle.unpickle[Set[(DateTime, Results)]]
+//    println(exampleRecording)
+//    println(unpickled)
+//    assert(exampleRecording == unpickled)
 
     val similarityThreshold = 2.002
-    val numSmoothingIterationsSeq = Seq(
-      0, 
-      1)
     //    val numSmoothingIterationsSeq = Seq(
-    //      0,
-    //      1,
-    //      2,
-    //      4,
-    //      8,
-    //      16,
-    //      32)
+    //      0, 
+    //      1)
+    val numSmoothingIterationsSeq = Seq(
+      0,
+      1,
+      2,
+      4,
+      8,
+      16,
+      32)
 
     val databaseYear = 2005
     //    val imageClasses = Seq(
@@ -78,11 +92,11 @@ class SimpleMiddlebury extends Task with Logging {
     //      //      DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.SIFT) ::
     //      HNil
 
-    val pixelSExtractors =
-      AndExtractor(
-        PatchExtractor(Gray, 24, 1),
-        ForegroundMaskExtractor(24)) ::
-        HNil
+//    val pixelSExtractors =
+//      AndExtractor(
+//        PatchExtractor(Gray, 24, 1),
+//        ForegroundMaskExtractor(24)) ::
+//        HNil
 
     val extractors = Seq(on[OpenCVExtractor.BRIEF.type])
 
