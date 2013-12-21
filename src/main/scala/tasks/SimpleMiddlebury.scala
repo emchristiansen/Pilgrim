@@ -22,7 +22,7 @@ import scala.reflect.ClassTag
 import com.sksamuel.scrimage._
 import org.opencv.core.KeyPoint
 import java.io.File
-import scala.util.Try
+import scala.util._
 import org.apache.commons.io.FileUtils
 
 class SimpleMiddlebury extends Task with Logging {
@@ -37,27 +37,30 @@ class SimpleMiddlebury extends Task with Logging {
       LogRoot(ExistingDirectory(file))
     }
 
-//    val image = Image(new File("/home/eric/Dropbox/goldfish_girl.png"))
-//    println(image.width)
-//    val pickled = image.toPOD.pickle
-//    val image2 = RichImage.fromPOD(pickled.unpickle[ImagePOD])
-//    assert(image == image2)
-//    println("here")
-    
-//    val image = Image(new File("/home/eric/Dropbox/goldfish_girl.png"))
-//    println(image.width)
-//    val pickled = image.pickle
-//    val image2 = pickled.unpickle[Image]
-//    assert(image == image2)
-//    println("here")    
-    
-//    val exampleTime = new DateTime
-//    val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
-//    val exampleRecording = Set((exampleTime, exampleResults))
-//    val unpickled = exampleRecording.pickle.unpickle[Set[(DateTime, Results)]]
-//    println(exampleRecording)
-//    println(unpickled)
-//    assert(exampleRecording == unpickled)
+    println(matlabLibraryRoot)
+    println(logRoot)
+
+    //    val image = Image(new File("/home/eric/Dropbox/goldfish_girl.png"))
+    //    println(image.width)
+    //    val pickled = image.toPOD.pickle
+    //    val image2 = RichImage.fromPOD(pickled.unpickle[ImagePOD])
+    //    assert(image == image2)
+    //    println("here")
+
+    //    val image = Image(new File("/home/eric/Dropbox/goldfish_girl.png"))
+    //    println(image.width)
+    //    val pickled = image.pickle
+    //    val image2 = pickled.unpickle[Image]
+    //    assert(image == image2)
+    //    println("here")    
+
+    //    val exampleTime = new DateTime
+    //    val exampleResults = Results(DenseMatrix.zeros[Double](4, 4))
+    //    val exampleRecording = Set((exampleTime, exampleResults))
+    //    val unpickled = exampleRecording.pickle.unpickle[Set[(DateTime, Results)]]
+    //    println(exampleRecording)
+    //    println(unpickled)
+    //    assert(exampleRecording == unpickled)
 
     val similarityThreshold = 2.002
     //    val numSmoothingIterationsSeq = Seq(
@@ -71,6 +74,7 @@ class SimpleMiddlebury extends Task with Logging {
       8,
       16,
       32)
+      val scaleFactor = 0.5
 
     val databaseYear = 2005
     //    val imageClasses = Seq(
@@ -85,25 +89,30 @@ class SimpleMiddlebury extends Task with Logging {
     val maxDescriptorPairs = 100
 
     val detectors = Seq(
-      s"${cn[DoublyBoundedPairDetector[_]]}(2, 200, 500, ${on[OpenCVDetector.FAST.type]})",
-      s"${cn[DoublyBoundedPairDetector[_]]}(2, 200, 500, ${on[OpenCVDetector.SIFT.type]})")
+      s"${cn[DoublyBoundedPairDetector[_]]}(2, 800, 2000, ${on[OpenCVDetector.FAST.type]})",
+      s"${cn[DoublyBoundedPairDetector[_]]}(2, 800, 2000, ${on[OpenCVDetector.SIFT.type]})")
 
     //    val detectors = DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.FAST) ::
     //      //      DoublyBoundedPairDetector(2, 200, 500, OpenCVDetector.SIFT) ::
     //      HNil
 
-//    val pixelSExtractors =
-//      AndExtractor(
-//        PatchExtractor(Gray, 24, 1),
-//        ForegroundMaskExtractor(24)) ::
-//        HNil
+    //    val pixelSExtractors =
+    //      AndExtractor(
+    //        PatchExtractor(Gray, 24, 1),
+    //        ForegroundMaskExtractor(24)) ::
+    //        HNil
 
-    val extractors = Seq(on[OpenCVExtractor.BRIEF.type])
+    //    val extractors = Seq(on[OpenCVExtractor.BRIEF.type])
 
-    //    val extractors = Seq(
-    //      on[OpenCVExtractor.BRIEF.type],
-    //      on[OpenCVExtractor.BRISK.type],
-    //      on[OpenCVExtractor.SIFT.type])
+        val extractors = Seq(
+          on[OpenCVExtractor.BRIEF.type],
+          on[OpenCVExtractor.BRISK.type],
+          on[OpenCVExtractor.SIFT.type])
+
+//    val extractors = Seq(
+//      s"""${cn[AndExtractor[_, _, _, _]]}(
+//        ${cn[PatchExtractor]}(${on[Gray.type]}, 24, 1),
+//        ${cn[ForegroundMaskExtractor]}(24))""")
 
     //    val extractors =
     //      OpenCVExtractor.BRIEF ::
@@ -132,14 +141,16 @@ class SimpleMiddlebury extends Task with Logging {
     //        VectorMatcher.L2 ::
     //        HNil
 
-    val matchers = Seq(
-      on[VectorMatcher.L0.type],
-      on[VectorMatcher.L1.type],
-      on[VectorMatcher.L2.type])
+        val matchers = Seq(
+          on[VectorMatcher.L0.type],
+          on[VectorMatcher.L1.type],
+          on[VectorMatcher.L2.type])
 
-    //    val matchers = pixelSMatchers
-    //    //    ++
-    //    //      (VectorMatcher.L0 :: VectorMatcher.L1 :: HNil)
+//    val matchers = Seq(
+//      s"${cn[PixelSMatcher]}(1, 0, 0, 0)",
+//      s"${cn[PixelSMatcher]}(0, 1, 0, 0)",
+//      s"${cn[PixelSMatcher]}(0, 0, 1, 0)",
+//      s"${cn[PixelSMatcher]}(0, 0, 0, 1)")
 
     //    object constructExperiment extends Poly1 {
     //      implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
@@ -175,6 +186,16 @@ class SimpleMiddlebury extends Task with Logging {
     //      extractors,
     //      matchers)
 
+    val matlabLibraryRootSource = s"""
+${cn[MatlabLibraryRoot]}(${cn[ExistingDirectory]}(
+  "${matlabLibraryRoot.data.data.getPath}"))
+"""
+
+    val logRootSource = s"""
+${cn[LogRoot]}(${cn[ExistingDirectory]}(
+  "${logRoot.data.data.getPath}"))
+"""
+
     val experimentOptions = for (
       numSmoothingIterations <- numSmoothingIterationsSeq;
       imageClass <- imageClasses;
@@ -183,6 +204,15 @@ class SimpleMiddlebury extends Task with Logging {
       matcher <- matchers
     ) yield {
       val source = s"""
+//import st.sparse.billy.detectors._
+//import st.sparse.billy.extractors._
+//import st.sparse.billy.matchers._
+//import st.sparse.billy.experiments.wideBaseline._
+      
+// Such a hack.
+implicit val matlabLibraryRoot = $matlabLibraryRootSource
+implicit val logRoot = $logRootSource      
+     
 val middlebury = ${cn[Middlebury[_, _, _, _]]}(
   $databaseYear, 
   "$imageClass", 
@@ -190,18 +220,37 @@ val middlebury = ${cn[Middlebury[_, _, _, _]]}(
   $detector,
   $extractor,
   $matcher)
-${cn[BlurredMiddlebury[_, _, _, _]]}(
+val blurred = ${cn[BlurredMiddlebury[_, _, _, _]]}(
   $similarityThreshold, 
   $numSmoothingIterations, 
+  $scaleFactor,
   middlebury)
+  
+//${on[Experiment]}.jsonCached(blurred)
+  blurred
 """
-      val experimentOption = Try(eval[Experiment](source)).toOption
-      if (!experimentOption.isDefined) {
-        println(s"Unable to compile:\n$source")
-      } else {
-        println(s"Compiled ${experimentOption.get}")
+      val experimentTry = Try(eval[Experiment](source))
+      experimentTry match {
+        case Success(e) => println(s"Compiled $e")
+        case Failure(e) =>
+          println(s"Unable to compile:\n$source")
+          println(s"Exception: $e")
       }
-      experimentOption
+
+      //      if (!experimentOption.isDefined) {
+      //        println(s"Unable to compile:\n$source")
+      //      } else {
+      //        println(s"Compiled ${experimentOption.get}")
+      //      }
+      //      val experimentOption = Try(eval[Experiment](source)).toOption
+      //      if (!experimentOption.isDefined) {
+      //        println(s"Unable to compile:\n$source")
+      //      } else {
+      //        println(s"Compiled ${experimentOption.get}")
+      //      }
+      //      experimentOption
+
+      experimentTry.toOption
     }
 
     //    val experiments = {
@@ -209,13 +258,19 @@ ${cn[BlurredMiddlebury[_, _, _, _]]}(
     //      hList.toList.flatten.toIndexedSeq
     //    }
 
-    val experiments = experimentOptions.flatten
+    val experiments: Seq[Experiment] = {
+      val uncached: Seq[Experiment] = experimentOptions.flatten
+//      uncached.map(e => Experiment.cached(e))
+      uncached
+//      Experiment.cached(uncached.head)
+//      ???
+    }
     println("Experiments:")
     experiments foreach println
 
-        val results = experiments.map { _.run }
+    val results = experiments.map { _.run }
 
-//    val results = experiments.par.map(_.run).toIndexedSeq
+            //val results = experiments.par.map(_.run).toIndexedSeq
 
     val table = Table(
       experiments zip results,

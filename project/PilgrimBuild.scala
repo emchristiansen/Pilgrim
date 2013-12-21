@@ -15,6 +15,7 @@ object PilgrimBuild extends Build {
       //     "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/",
       //      "repo.codahale.com" at "http://repo.codahale.com",
       "Akka Repository" at "http://repo.akka.io/releases/",
+      "spray" at "http://repo.spray.io/",
       //      "spray-io" at "http://repo.spray.io/",
       "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo",
       "Local Maven Repository" at Path.userHome.asFile.toURI.toURL + "/.m2/repository"))
@@ -30,6 +31,7 @@ object PilgrimBuild extends Build {
       //      "mysql" % "mysql-connector-java" % "5.1.6",
       "com.typesafe.slick" %% "slick" % "1.0.1",
       "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT",
+      "io.spray" %%  "spray-json" % "1.2.5",
       "st.sparse" %% "sundry" % "0.1.2-SNAPSHOT",
       "st.sparse" %% "billy" % "0.1.2-SNAPSHOT",
       "com.sksamuel.scrimage" %% "scrimage-core" % "1.3.9",

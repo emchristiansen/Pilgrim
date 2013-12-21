@@ -8,23 +8,14 @@ import st.sparse.sundry.ExistingDirectory
 import st.sparse.billy._
 import java.io.File
 
-class TransformMariaDB extends RuntimeConfigWrapper {
+class TransformSQLite extends RuntimeConfigWrapper {
   class Conf(args: Seq[String]) extends ScallopConf(args) {
-    banner("RuntimeConfig for Eric's laptop, using MariaDB.")
-
-    val mariadbPassword = opt[String](
-      descr = "Password for the MariaDB root user.",
-      required = true)
+    banner("RuntimeConfig for Eric's laptop, using SQLite.")
   }
 
   override def runtimeConfig(unparsedArgs: Seq[String]) = {
-    val args = new Conf(unparsedArgs)
-
-    val database = ConnectionHelper.databaseMariaDB(
-      "localhost",
-      "Pilgrim",
-      "root",
-      args.mariadbPassword())
+    val database = ConnectionHelper.databaseSQLite(
+      new File("/home/eric/t/2013_q4/pilgrimOutput/Pilgrim.sqlite"))
 
     val matlabLibraryRoot = MatlabLibraryRoot(ExistingDirectory(
       "/home/eric/Dropbox/t/2013_q4/matlabLibraryRoot"))
